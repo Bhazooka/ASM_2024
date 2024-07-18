@@ -1,0 +1,87 @@
+Microsoft (R) Macro Assembler Version 6.11		    07/18/24 16:15:09
+src\221005009_P00.asm					     Page 1 - 1
+
+
+				;	Update all of this information to reflect your own details and the prac
+				;	Author:     Dr J du Toit
+				;	Template document
+				.386
+				.MODEL FLAT ; Flat memory model
+				.STACK 4096 ; 4096 bytes
+
+				; Exit function
+				ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
+
+				; The data section stores all global variables
+ 00000000			.DATA
+ 00000000 000000A1		    ARH         DWORD 161
+ 00000004 0000006D		    Duration    DWORD 109
+ 00000008 00003023		    Steps       DWORD 12323
+ 0000000C 00000000		    Calories    DWORD ?    
+				    
+ 00000000			.CODE
+ 00000000			_start:
+ 00000000  A1 00000000 R	    mov EAX, ARH
+ 00000005  0F AF 05		    imul EAX, Duration
+	   00000004 R
+ 0000000C  99			    cdq
+ 0000000D  B9 00000064		    mov ECX, 100
+ 00000012  F7 F9		    idiv ECX
+ 00000014  8B D8		    mov EBX, EAX
+
+ 00000016  A1 00000008 R	    mov EAX, Steps
+ 0000001B  99			    CDQ
+ 0000001C  B9 00000014		    mov ECX, 20
+ 00000021  F7 F9		    idiv ECX
+
+ 00000023  03 C3		    add EAX, EBX
+ 00000025  A3 0000000C R	    mov Calories, EAX
+
+					INVOKE ExitProcess, 0
+ 00000031			Public _start
+				END
+Microsoft (R) Macro Assembler Version 6.11		    07/18/24 16:15:09
+src\221005009_P00.asm					     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000010 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000031 DWord	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+$$$$$$00001  . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000031 Private
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+ARH  . . . . . . . . . . . . . .	DWord	 00000000 _DATA	
+Calories . . . . . . . . . . . .	DWord	 0000000C _DATA	
+Duration . . . . . . . . . . . .	DWord	 00000004 _DATA	
+Steps  . . . . . . . . . . . . .	DWord	 00000008 _DATA	
+_start . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public
+
+	   0 Warnings
+	   0 Errors

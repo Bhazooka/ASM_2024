@@ -1,0 +1,72 @@
+Microsoft (R) Macro Assembler Version 6.11		    07/18/24 14:29:55
+src\template.asm					     Page 1 - 1
+
+
+				;	Update all of this information to reflect your own details and the prac
+				;	Author:     Dr J du Toit
+				;	Template document
+				.386
+				.MODEL FLAT ; Flat memory model
+				.STACK 4096 ; 4096 bytes
+
+				; Exit function
+				ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
+
+				; The data section stores all global variables
+ 00000000			.DATA
+
+				; The code section may contain multiple tags such as _start, which is the entry
+				; point of this assembly program
+ 00000000			.CODE
+ 00000000			_start:
+ 00000000				; Most of your initial code will be under the _start tag.
+					; The _start tag is just a memory address referenced by the Public indicator
+					; highlighting which functions are available to calling functions.
+					; _start gets called by the operating system to start this process.
+				 
+
+					; We call the Operating System ExitProcess system call to close the process.
+					INVOKE ExitProcess, 0
+ 00000007			Public _start
+				END
+Microsoft (R) Macro Assembler Version 6.11		    07/18/24 14:29:55
+src\template.asm					     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000000 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000007 DWord	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+$$$$$$00001  . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000007 Private
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+_start . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public
+
+	   0 Warnings
+	   0 Errors
