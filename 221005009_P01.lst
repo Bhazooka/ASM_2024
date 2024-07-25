@@ -1,0 +1,166 @@
+Microsoft (R) Macro Assembler Version 6.11		    07/25/24 14:55:49
+src\221005009_P01.asm					     Page 1 - 1
+
+
+				;	Author: B Bukanga
+				;	Template document
+				.386
+				.MODEL FLAT ; Flat memory model
+				.STACK 4096 ; 4096 bytes
+				INCLUDE io.inc
+			      C ;
+			      C ; Simple I/O Routines - Version 2
+			      C ;
+			      C 
+			      C IFNDEF IO_INC
+ = 1			      C IO_INC equ <1>
+			      C 
+			      C OutputStr PROTO NEAR32 STDCALL :DWORD
+			      C OutputInt PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat8 PROTO NEAR32 STDCALL :QWORD
+			      C InputInt PROTO NEAR32 STDCALL
+			      C InputStr PROTO NEAR32 STDCALL :DWORD, :DWORD
+			      C 
+			      C ELSE
+			      C ENDIF
+			      C 
+
+				; Exit function
+				ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
+
+				; The data section stores all global variables
+ 00000000			.DATA
+ 00000000 00000000		    distanceMeters          DWORD   ?
+ 00000004 00000000		    distanceKilometers      DWORD   ?
+ 00000008 00000000		    stride                  DWORD   ?
+ 0000000C 00000000		    stepcount               DWORD   ?
+
+
+ 00000010 54 68 65 20 64	    strDistanceMeters          BYTE   "The distance in Meters is: ", 0
+	   69 73 74 61 6E
+	   63 65 20 69 6E
+	   20 4D 65 74 65
+	   72 73 20 69 73
+	   3A 20 00
+ 0000002C 54 68 65 20 64	    strDistanceKilometers      BYTE   "The distance in Kilomiters is: ", 0
+	   69 73 74 61 6E
+	   63 65 20 69 6E
+	   20 4B 69 6C 6F
+	   6D 69 74 65 72
+	   73 20 69 73 3A
+	   20 00
+ 0000004C 45 6E 74 65 72	    strStride                  BYTE   "Enter the Stride in cm: ", 0
+	   20 74 68 65 20
+	   53 74 72 69 64
+	   65 20 69 6E 20
+	   63 6D 3A 20 00
+ 00000065 45 6E 74 65 72	    strStepcount               BYTE   "Enter the Steps: ", 0
+	   20 74 68 65 20
+	   53 74 65 70 73
+	   3A 20 00
+ 00000077 0A 00			    strNL                      BYTE   10, 0
+
+ 00000000			.CODE
+ 00000000			_start:
+ 00000000
+				    ; getting values for stride
+				    INVOKE OutputStr, ADDR strStride
+				    INVOKE InputInt
+ 0000000F  A3 00000008 R	    mov stride, EAX
+
+				    ; getting values for count
+				    INVOKE OutputStr, ADDR strStepcount
+				    INVOKE InputInt
+ 00000023  A3 0000000C R	    mov stepcount, EAX
+
+				    ; (stride * stepcount)
+ 00000028  A1 00000008 R	    mov eax, stride
+ 0000002D  0F AF 05		    imul eax, stepcount
+	   0000000C R
+
+				    ; /100
+ 00000034  BB 00000064		    mov ebx, 100
+ 00000039  99			    cdq
+ 0000003A  F7 FB		    idiv ebx
+ 0000003C  A3 00000000 R	    mov distanceMeters, eax
+
+				    
+
+				    ; (distanceMeters)/1000
+ 00000041  A1 00000000 R	    mov eax, distanceMeters
+ 00000046  BB 000003E8		    mov ebx, 1000
+ 0000004B  99			    cdq
+ 0000004C  F7 FB		    idiv ebx
+ 0000004E  A3 00000004 R	    mov distanceKilometers, eax
+
+				    ; output string
+				    INVOKE OutputStr, ADDR strDistanceMeters
+				    INVOKE OutputInt, distanceMeters
+				    INVOKE OutputStr, ADDR strNL
+
+				    INVOKE OutputStr, ADDR strDistanceKilometers
+				    INVOKE OutputInt, distanceKilometers
+				    INVOKE OutputStr, ADDR strNL
+
+
+					INVOKE ExitProcess, 0
+ 00000098			Public _start
+				END
+Microsoft (R) Macro Assembler Version 6.11		    07/25/24 14:55:49
+src\221005009_P01.asm					     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000079 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000098 DWord	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+$$$$$$00001  . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000098 Private
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputStr . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat8 . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputInt  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputStr  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+IO_INC . . . . . . . . . . . . .	Text   	 1
+_start . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public
+distanceKilometers . . . . . . .	DWord	 00000004 _DATA	
+distanceMeters . . . . . . . . .	DWord	 00000000 _DATA	
+stepcount  . . . . . . . . . . .	DWord	 0000000C _DATA	
+strDistanceKilometers  . . . . .	Byte	 0000002C _DATA	
+strDistanceMeters  . . . . . . .	Byte	 00000010 _DATA	
+strNL  . . . . . . . . . . . . .	Byte	 00000077 _DATA	
+strStepcount . . . . . . . . . .	Byte	 00000065 _DATA	
+strStride  . . . . . . . . . . .	Byte	 0000004C _DATA	
+stride . . . . . . . . . . . . .	DWord	 00000008 _DATA	
+
+	   0 Warnings
+	   0 Errors
