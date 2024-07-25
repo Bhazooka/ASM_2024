@@ -24,6 +24,7 @@ ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
     strNL                      BYTE   10, 0
     strDecimal                 BYTE   ".",0
 
+
 .CODE
 _start:
 

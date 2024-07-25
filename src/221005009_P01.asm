@@ -48,10 +48,18 @@ _start:
     idiv ebx
     mov distanceMeters, eax
 
+    ; Logic for decimal
+    mov eax, edx
+    mov ebx, 10
+    cdq
+    idiv ebx
+    mov ecx, eax
+
     ; display Distance in M
     INVOKE OutputStr, ADDR strDistanceMeters
     INVOKE OutputInt, distanceMeters
     INVOKE OutputStr, ADDR strDecimal
+    INVOKE OutputInt, ecx
     INVOKE OutputInt, edx
     INVOKE OutputStr, ADDR strNL
 
@@ -60,12 +68,21 @@ _start:
     mov ebx, 1000
     cdq
     idiv ebx
+
     mov distanceKilometers, eax
+
+    ; Logic for decimal
+    mov eax, edx
+    mov ebx, 100
+    cdq
+    idiv ebx
+    mov ecx, eax
 
     ; Display distance in KM
     INVOKE OutputStr, ADDR strDistanceKilometers
     INVOKE OutputInt, distanceKilometers
     INVOKE OutputStr, ADDR strDecimal
+    INVOKE OutputInt, ecx
     INVOKE OutputInt, edx
     INVOKE OutputStr, ADDR strNL
 

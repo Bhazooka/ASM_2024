@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 6.11		    07/25/24 16:07:18
+Microsoft (R) Macro Assembler Version 6.11		    07/25/24 16:38:07
 src\221005009_P01.asm					     Page 1 - 1
 
 
@@ -88,32 +88,47 @@ src\221005009_P01.asm					     Page 1 - 1
  0000003A  F7 FB		    idiv ebx
  0000003C  A3 00000000 R	    mov distanceMeters, eax
 
+ 00000041  8B C2		    mov eax, edx
+ 00000043  BB 0000000A		    mov ebx, 10
+ 00000048  99			    cdq
+ 00000049  F7 FB		    idiv ebx
+ 0000004B  8B C8		    mov ecx, eax
+
 				    ; display Distance in M
 				    INVOKE OutputStr, ADDR strDistanceMeters
 				    INVOKE OutputInt, distanceMeters
-				    INVOKE OutputFloat, ADDR strDecimal
+				    INVOKE OutputStr, ADDR strDecimal
+				    INVOKE OutputInt, ecx
 				    INVOKE OutputInt, edx
 				    INVOKE OutputStr, ADDR strNL
 
 				    ; (distanceMeters)/1000
- 00000070  A1 00000000 R	    mov eax, distanceMeters
- 00000075  BB 000003E8		    mov ebx, 1000
- 0000007A  99			    cdq
- 0000007B  F7 FB		    idiv ebx
- 0000007D  A3 00000004 R	    mov distanceKilometers, eax
+ 00000082  A1 00000000 R	    mov eax, distanceMeters
+ 00000087  BB 000003E8		    mov ebx, 1000
+ 0000008C  99			    cdq
+ 0000008D  F7 FB		    idiv ebx
+
+ 0000008F  A3 00000004 R	    mov distanceKilometers, eax
+
+ 00000094  8B C2		    mov eax, edx
+ 00000096  BB 00000064		    mov ebx, 100
+ 0000009B  99			    cdq
+ 0000009C  F7 FB		    idiv ebx
+ 0000009E  8B C8		    mov ecx, eax
 
 				    ; Display distance in KM
 				    INVOKE OutputStr, ADDR strDistanceKilometers
 				    INVOKE OutputInt, distanceKilometers
-				    INVOKE OutputFloat, ADDR strDecimal
+				    INVOKE OutputStr, ADDR strDecimal
+				    INVOKE OutputInt, ecx
 				    INVOKE OutputInt, edx
 				    INVOKE OutputStr, ADDR strNL
 
 
 					INVOKE ExitProcess, 0
- 000000B8			Public _start
+ 000000DC			Public _start
 				END
-Microsoft (R) Macro Assembler Version 6.11		    07/25/24 16:07:18
+Microsoft (R) Macro Assembler Version 6.11		    07/25/24 16:38:07
 src\221005009_P01.asm					     Symbols 2 - 1
 
 
@@ -126,14 +141,14 @@ Segments and Groups:
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
 _DATA  . . . . . . . . . . . . .	32 Bit	 0000007F DWord	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 000000B8 DWord	  Public  'CODE'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000000DC DWord	  Public  'CODE'	
 
 
 Procedures,  parameters and locals:
 
                 N a m e                 Type     Value    Attr
 
-$$$$$$00001  . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000000B8 Private
+$$$$$$00001  . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000000DC Private
 ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 InputInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 InputStr . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
