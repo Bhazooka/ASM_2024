@@ -1,0 +1,294 @@
+Microsoft (R) Macro Assembler Version 6.11		    08/01/24 16:50:47
+src\221005009_P02.asm					     Page 1 - 1
+
+
+				; Author: B Bukanga
+				.386
+				.MODEL FLAT ; Flat memory model
+				.STACK 4096 ; 4096 bytes
+				INCLUDE io.inc
+			      C ;
+			      C ; Simple I/O Routines - Version 2
+			      C ;
+			      C 
+			      C IFNDEF IO_INC
+ = 1			      C IO_INC equ <1>
+			      C 
+			      C OutputStr PROTO NEAR32 STDCALL :DWORD
+			      C OutputInt PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat8 PROTO NEAR32 STDCALL :QWORD
+			      C InputInt PROTO NEAR32 STDCALL
+			      C InputStr PROTO NEAR32 STDCALL :DWORD, :DWORD
+			      C 
+			      C ELSE
+			      C ENDIF
+			      C 
+
+				; Exit function
+				ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
+
+ 00000000			.DATA
+ 00000000 00000000		    HR0     DWORD   ?
+ 00000004 00000000		    HR1     DWORD   ?
+ 00000008 00000000		    HR2     DWORD   ?
+ 0000000C 00000000		    HR3     DWORD   ?
+ 00000010 00000000		    HR4     DWORD   ?
+ 00000014 00000000		    Total   DWORD   ?   ; To store the total before the division
+ 00000018 00000000		    Average DWORD   ?
+ 0000001C 00000000		    RoundedAverage  DWORD   ?
+ 00000020 00000000		    Maximum DWORD   ?
+ 00000024 00000000		    choice  DWORD   ?   ; To store the user's choice
+
+				    ; String prompts
+ 00000028 45 6E 74 65 72	    strHR0  BYTE "Enter Heart Rate 0: ", 0
+	   20 48 65 61 72
+	   74 20 52 61 74
+	   65 20 30 3A 20
+	   00
+ 0000003D 45 6E 74 65 72	    strHR1  BYTE "Enter Heart Rate 1: ", 0
+	   20 48 65 61 72
+	   74 20 52 61 74
+	   65 20 31 3A 20
+	   00
+ 00000052 45 6E 74 65 72	    strHR2  BYTE "Enter Heart Rate 2: ", 0
+	   20 48 65 61 72
+	   74 20 52 61 74
+	   65 20 32 3A 20
+	   00
+ 00000067 45 6E 74 65 72	    strHR3  BYTE "Enter Heart Rate 3: ", 0
+	   20 48 65 61 72
+	   74 20 52 61 74
+	   65 20 33 3A 20
+	   00
+ 0000007C 45 6E 74 65 72	    strHR4  BYTE "Enter Heart Rate 4: ", 0
+	   20 48 65 61 72
+	   74 20 52 61 74
+	   65 20 34 3A 20
+	   00
+ 00000091 54 6F 74 61 6C	    strTotal BYTE "Total: ", 0
+	   3A 20 00
+				    ;Display strings
+ 00000099 41 76 65 72 61	    strAverage BYTE "Average Heart Rate: ", 0
+	   67 65 20 48 65
+	   61 72 74 20 52
+	   61 74 65 3A 20
+	   00
+ 000000AE 52 6F 75 6E 64	    strRoundAverage BYTE "Rounded Average Heart Rate: ", 0
+	   65 64 20 41 76
+	   65 72 61 67 65
+	   20 48 65 61 72
+	   74 20 52 61 74
+	   65 3A 20 00
+ 000000CB 4D 61 78 69 6D	    strMaximum BYTE "Maximum: ", 0
+	   75 6D 3A 20 00
+ 000000D5 50 72 65 73 73	    strContinue BYTE "Press 0 to quit and 1 to continue: ", 0
+	   20 30 20 74 6F
+	   20 71 75 69 74
+	   20 61 6E 64 20
+	   31 20 74 6F 20
+	   63 6F 6E 74 69
+	   6E 75 65 3A 20
+	   00
+ 000000F9 0A 00			    strNL   BYTE    10,0
+ 000000FB 2E 00			    strDecimal BYTE ".", 0
+
+ 00000000			.CODE
+ 00000000			_start:
+ 00000000			    ; get user inputs
+				    INVOKE  OutputStr, ADDR strHR0
+				    INVOKE  InputInt
+ 0000000F  A3 00000000 R	    mov     HR0,    eax
+
+				    INVOKE  OutputStr, ADDR strHR1
+				    INVOKE  InputInt
+ 00000023  A3 00000004 R	    mov     HR1,    eax
+
+				    INVOKE  OutputStr, ADDR strHR2
+				    INVOKE  InputInt
+ 00000037  A3 00000008 R	    mov     HR2,    eax
+
+				    INVOKE  OutputStr, ADDR strHR3
+				    INVOKE  InputInt
+ 0000004B  A3 0000000C R	    mov     HR3,    eax
+
+				    INVOKE  OutputStr, ADDR strHR4
+				    INVOKE  InputInt
+ 0000005F  A3 00000010 R	    mov     HR4,    eax
+
+				    ; Calculate total
+ 00000064  A1 00000000 R	    mov     eax, HR0
+ 00000069  03 05 00000004 R	    add     eax, HR1
+ 0000006F  03 05 00000008 R	    add     eax, HR2
+ 00000075  03 05 0000000C R	    add     eax, HR3
+ 0000007B  03 05 00000010 R	    add     eax, HR4
+ 00000081  A3 00000014 R	    mov     Total, eax
+
+				    ; Calculate average (Total / 5)
+ 00000086  A1 00000014 R	    mov     eax, Total
+ 0000008B  BB 00000005		    mov     ebx, 5
+ 00000090  99			    cdq
+ 00000091  F7 FB		    idiv    ebx
+ 00000093  A3 00000018 R	    mov     Average, eax
+
+				    ; Output average before rounding with decimal part
+				    INVOKE  OutputStr, ADDR strAverage
+				    INVOKE  OutputInt, Average
+
+				    ; Calculate decimal part for Average
+ 000000AD  8B C2		    mov     eax, edx
+ 000000AF  6B C0 02		    imul     eax, 2
+ 000000B2  8B C8		    mov     ecx, eax
+				    INVOKE  OutputStr, ADDR strDecimal
+				    INVOKE  OutputInt, ecx
+				    INVOKE  OutputStr, ADDR strNL
+
+				    ; Calculate rounded average
+ 000000CE  A1 00000014 R	    mov     eax, Total
+ 000000D3  BB 00000005		    mov     ebx, 5
+ 000000D8  99			    cdq
+ 000000D9  F7 FB		    idiv    ebx
+ 000000DB  A3 0000001C R	    mov     RoundedAverage, eax
+ 000000E0  85 D2		    test    edx, edx  ; Check if remainder is 0
+ 000000E2  74 06		    jz      NoRound
+ 000000E4  FF 05 0000001C R	    inc     RoundedAverage
+
+ 000000EA			NoRound:
+				    ; Output rounded average
+				    INVOKE  OutputStr, ADDR strRoundAverage
+ 000000F4  A1 0000001C R	    mov     eax, RoundedAverage
+				    INVOKE  OutputInt, eax
+				    INVOKE  OutputStr, ADDR strNL
+
+				    ; Calculate maximum heart rate
+ 00000109  A1 00000000 R	    mov     eax, HR0
+ 0000010E  8B D0		    mov     edx, eax
+ 00000110  A1 00000004 R	    mov     eax, HR1
+ 00000115  3B C2		    cmp     eax, edx
+ 00000117  7E 02		    jle     CheckHR2
+ 00000119  8B D0		    mov     edx, eax
+ 0000011B			CheckHR2:
+ 0000011B  A1 00000008 R	    mov     eax, HR2
+ 00000120  3B C2		    cmp     eax, edx
+ 00000122  7E 02		    jle     CheckHR3
+ 00000124  8B D0		    mov     edx, eax
+ 00000126			CheckHR3:
+ 00000126  A1 0000000C R	    mov     eax, HR3
+ 0000012B  3B C2		    cmp     eax, edx
+ 0000012D  7E 02		    jle     CheckHR4
+ 0000012F  8B D0		    mov     edx, eax
+ 00000131			CheckHR4:
+ 00000131  A1 00000010 R	    mov     eax, HR4
+ 00000136  3B C2		    cmp     eax, edx
+ 00000138  7E 02		    jle     SetMax
+ 0000013A  8B D0		    mov     edx, eax
+ 0000013C			SetMax:
+ 0000013C  89 15 00000020 R	    mov     Maximum, edx
+
+				    ; Output maximum heart rate
+				    INVOKE  OutputStr, ADDR strMaximum
+ 0000014C  A1 00000020 R	    mov     eax, Maximum
+				    INVOKE  OutputInt, eax
+				    INVOKE  OutputStr, ADDR strNL
+
+				    ; Ask the user if they want to continue or quit
+				    INVOKE  OutputStr, ADDR strContinue
+				    INVOKE  InputInt
+ 00000170  A3 00000024 R	    mov     choice, eax
+ 00000175  83 3D 00000024 R	    cmp     choice, 0
+	   00
+ 0000017C  74 12		    je      ExitLoop   ; Jump to exit if the choice is 0
+ 0000017E  83 3D 00000024 R	    cmp     choice, 1
+	   01
+ 00000185  0F 85 FFFFFE75	    jne     _start     ; If the choice is not 1, re-prompt the user
+
+				    ; Loop back to _start for another iteration
+ 0000018B  E9 FFFFFE70		    jmp     _start
+
+ 00000190			ExitLoop:
+				    INVOKE ExitProcess, 0
+
+ 00000197			Public _start
+				END
+Microsoft (R) Macro Assembler Version 6.11		    08/01/24 16:50:47
+src\221005009_P02.asm					     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 000000FD DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000197 DWord	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+$$$$$$00001  . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000197 Private
+  NoRound  . . . . . . . . . . .	L Near	 000000EA _TEXT	
+  CheckHR2 . . . . . . . . . . .	L Near	 0000011B _TEXT	
+  CheckHR3 . . . . . . . . . . .	L Near	 00000126 _TEXT	
+  CheckHR4 . . . . . . . . . . .	L Near	 00000131 _TEXT	
+  SetMax . . . . . . . . . . . .	L Near	 0000013C _TEXT	
+  ExitLoop . . . . . . . . . . .	L Near	 00000190 _TEXT	
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputStr . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat8 . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputInt  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputStr  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+Average  . . . . . . . . . . . .	DWord	 00000018 _DATA	
+CheckHR2 . . . . . . . . . . . .	L Near	 0000011B _TEXT	
+CheckHR3 . . . . . . . . . . . .	L Near	 00000126 _TEXT	
+CheckHR4 . . . . . . . . . . . .	L Near	 00000131 _TEXT	
+ExitLoop . . . . . . . . . . . .	L Near	 00000190 _TEXT	
+HR0  . . . . . . . . . . . . . .	DWord	 00000000 _DATA	
+HR1  . . . . . . . . . . . . . .	DWord	 00000004 _DATA	
+HR2  . . . . . . . . . . . . . .	DWord	 00000008 _DATA	
+HR3  . . . . . . . . . . . . . .	DWord	 0000000C _DATA	
+HR4  . . . . . . . . . . . . . .	DWord	 00000010 _DATA	
+IO_INC . . . . . . . . . . . . .	Text   	 1
+Maximum  . . . . . . . . . . . .	DWord	 00000020 _DATA	
+NoRound  . . . . . . . . . . . .	L Near	 000000EA _TEXT	
+RoundedAverage . . . . . . . . .	DWord	 0000001C _DATA	
+SetMax . . . . . . . . . . . . .	L Near	 0000013C _TEXT	
+Total  . . . . . . . . . . . . .	DWord	 00000014 _DATA	
+_start . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public
+choice . . . . . . . . . . . . .	DWord	 00000024 _DATA	
+strAverage . . . . . . . . . . .	Byte	 00000099 _DATA	
+strContinue  . . . . . . . . . .	Byte	 000000D5 _DATA	
+strDecimal . . . . . . . . . . .	Byte	 000000FB _DATA	
+strHR0 . . . . . . . . . . . . .	Byte	 00000028 _DATA	
+strHR1 . . . . . . . . . . . . .	Byte	 0000003D _DATA	
+strHR2 . . . . . . . . . . . . .	Byte	 00000052 _DATA	
+strHR3 . . . . . . . . . . . . .	Byte	 00000067 _DATA	
+strHR4 . . . . . . . . . . . . .	Byte	 0000007C _DATA	
+strMaximum . . . . . . . . . . .	Byte	 000000CB _DATA	
+strNL  . . . . . . . . . . . . .	Byte	 000000F9 _DATA	
+strRoundAverage  . . . . . . . .	Byte	 000000AE _DATA	
+strTotal . . . . . . . . . . . .	Byte	 00000091 _DATA	
+
+	   0 Warnings
+	   0 Errors
