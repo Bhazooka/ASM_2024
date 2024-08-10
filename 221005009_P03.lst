@@ -1,0 +1,350 @@
+Microsoft (R) Macro Assembler Version 6.11		    08/08/24 17:01:28
+src\221005009_P03.asm					     Page 1 - 1
+
+
+				;	Update all of this information to reflect your own details and the prac
+				;	Author:     222026635,SM , MAHARAJ 
+				;	Template document
+				.386
+				.MODEL FLAT
+				.STACK 4096
+
+				; Exit function
+				ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
+
+				INCLUDE io.inc
+			      C ;
+			      C ; Simple I/O Routines - Version 2
+			      C ;
+			      C 
+			      C IFNDEF IO_INC
+ = 1			      C IO_INC equ <1>
+			      C 
+			      C OutputStr PROTO NEAR32 STDCALL :DWORD
+			      C OutputInt PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat8 PROTO NEAR32 STDCALL :QWORD
+			      C InputInt PROTO NEAR32 STDCALL
+			      C InputStr PROTO NEAR32 STDCALL :DWORD, :DWORD
+			      C 
+			      C ELSE
+			      C ENDIF
+			      C 
+
+				; The data section stores all global variables
+ 00000000			.DATA
+ 00000000 00000000		age DWORD ?
+ 00000004  00000008 [		inputArray DWORD 8 DUP(?)
+	    00000000
+	   ]
+ 00000024  00000008 [		outputArray DWORD 8 DUP(?)
+	    00000000
+	   ]
+ 00000044 00000000		maxHeartRate DWORD ?
+ 00000048 00000000		average DWORD ?
+ 0000004C  0000000F [		intensitystr BYTE 15 DUP(?), 0
+	    00
+	   ] 00
+ 0000005C 45 6E 74 65 72	strPromptAge BYTE "Enter age: ", 0
+	   20 61 67 65 3A
+	   20 00
+ 00000068 45 6E 74 65 72	strPromptHR BYTE "Enter heart rate value ", 0
+	   20 68 65 61 72
+	   74 20 72 61 74
+	   65 20 76 61 6C
+	   75 65 20 00
+ 00000080 3A 20 00		strColon BYTE ": ", 0
+ 00000083 20 00			strSpace BYTE " ", 0
+ 00000085 0D 0A 00		strNewLine BYTE 13, 10, 0
+ 00000088 49 6E 70 75 74	strInputArray BYTE "Input heart rate values: [", 0
+	   20 68 65 61 72
+	   74 20 72 61 74
+	   65 20 76 61 6C
+	   75 65 73 3A 20
+	   5B 00
+ 000000A3 4F 75 74 70 75	strOutputArray BYTE "Output heart rate percentages: [", 0
+	   74 20 68 65 61
+	   72 74 20 72 61
+	   74 65 20 70 65
+	   72 63 65 6E 74
+	   61 67 65 73 3A
+	   20 5B 00
+ 000000C4 46 69 6E 61 6C	strFinalIntensity BYTE "Final intensity: ", 0
+	   20 69 6E 74 65
+	   6E 73 69 74 79
+	   3A 20 00
+ 000000D6 6E 6F 6E 65 00	strIntensityNone BYTE "none", 0
+ 000000DB 6C 69 67 68 74	strIntensityLight BYTE "light", 0
+	   00
+ 000000E1 6D 6F 64 65 72	strIntensityModerate BYTE "moderate", 0
+	   61 74 65 00
+ 000000EA 76 69 67 6F 72	strIntensityVigorous BYTE "vigorous", 0
+	   6F 75 73 00
+ 000000F3 5D 00			strRightBracket BYTE "]", 0  ; Define the right bracket message
+ 000000F5 44 6F 20 79 6F	strContinue BYTE "Do you want to continue? (1 to continue, 0 to exit): ", 0
+	   75 20 77 61 6E
+	   74 20 74 6F 20
+	   63 6F 6E 74 69
+	   6E 75 65 3F 20
+	   28 31 20 74 6F
+	   20 63 6F 6E 74
+	   69 6E 75 65 2C
+	   20 30 20 74 6F
+	   20 65 78 69 74
+	   29 3A 20 00
+
+				; The code section may contain multiple tags such as _start, which is the entry
+				; point of this assembly program
+ 00000000			.CODE
+				PUBLIC _start  
+						; Most of your initial code will be under the _start tag.
+						; The _start tag is just a memory address referenced by the Public indicator
+						; highlighting which functions are available to calling functions.
+						; _start gets called by the operating system to start this process.
+
+ 00000000			_start:
+ 00000000			    ; Main program loop
+ 00000000  BB 00000004 R	    MOV EBX, OFFSET inputArray
+ 00000005  BE 00000024 R	    MOV ESI, OFFSET outputArray
+				    
+				    ; Prompt for age
+				    INVOKE OutputStr, ADDR strPromptAge
+				    INVOKE InputInt
+ 00000019  A3 00000000 R	    MOV age, EAX
+				    
+				    ; Calculate max heart rate (220 - age)
+ 0000001E  B8 000000DC		    MOV EAX, 220
+ 00000023  2B 05 00000000 R	    SUB EAX, age
+ 00000029  A3 00000044 R	    MOV maxHeartRate, EAX
+				    
+				    ; Get heart rate values and calculate percentages
+ 0000002E  B9 00000000		    MOV ECX, 0
+ 00000033			input_loop:
+ 00000033  83 F9 08		    CMP ECX, 8
+ 00000036  7D 42		    JGE calculate_average
+				    
+				    ; Prompt for heart rate value
+				    INVOKE OutputStr, ADDR strPromptHR
+ 00000042  8B C1		    MOV EAX, ECX
+ 00000044  40			    INC EAX
+				    INVOKE OutputInt, EAX
+				    INVOKE OutputStr, ADDR strColon
+				    INVOKE InputInt
+ 0000005A  89 04 8B		    MOV DWORD PTR [EBX + ECX*4], EAX
+				    
+				    ; Calculate percentage
+ 0000005D  8B 04 8B		    MOV EAX, DWORD PTR [EBX + ECX*4]
+ 00000060  6B C0 64		    IMUL EAX, 100
+ 00000063  99			    CDQ
+ 00000064  F7 3D 00000044 R	    IDIV maxHeartRate
+ 0000006A  83 F8 64		    CMP EAX, 100
+ 0000006D  7E 05		    JLE store_percentage
+ 0000006F  B8 00000064		    MOV EAX, 100
+ 00000074			store_percentage:
+ 00000074  89 04 8E		    MOV DWORD PTR [ESI + ECX*4], EAX
+				    
+ 00000077  41			    INC ECX
+ 00000078  EB B9		    JMP input_loop
+
+ 0000007A			calculate_average:
+				    ; Calculate average of output array
+ 0000007A  B9 00000000		    MOV ECX, 0
+ 0000007F  33 C0		    XOR EAX, EAX
+ 00000081  BB 00000024 R	    MOV EBX, OFFSET outputArray
+ 00000086			avg_loop:
+ 00000086  83 F9 08		    CMP ECX, 8
+ 00000089  7D 06		    JGE finalize
+ 0000008B  03 04 8B		    ADD EAX, DWORD PTR [EBX + ECX*4]
+ 0000008E  41			    INC ECX
+ 0000008F  EB F5		    JMP avg_loop
+				    
+ 00000091			finalize:
+				    ; Calculate final average
+ 00000091  99			    CDQ
+ 00000092  B9 00000008		    MOV ECX, 8
+ 00000097  F7 F9		    IDIV ECX
+ 00000099  A3 00000048 R	    MOV average, EAX
+				    
+				    ; Determine intensity message
+ 0000009E  83 F8 3C		    CMP EAX, 60
+ 000000A1  7C 0C		    JL set_none
+ 000000A3  83 F8 46		    CMP EAX, 70
+ 000000A6  7C 1A		    JL set_light
+ 000000A8  83 F8 50		    CMP EAX, 80
+ 000000AB  7C 28		    JL set_moderate
+ 000000AD  EB 37		    JMP set_vigorous
+
+ 000000AF			set_none:
+ 000000AF  8D 3D 0000004C R	    LEA EDI, intensitystr
+ 000000B5  B9 00000005		    MOV ECX, LENGTHOF strIntensityNone
+ 000000BA  8D 35 000000D6 R	    LEA ESI, strIntensityNone
+ 000000C0  EB 35		    JMP copy_str
+
+ 000000C2			set_light:
+ 000000C2  8D 3D 0000004C R	    LEA EDI, intensitystr
+ 000000C8  B9 00000006		    MOV ECX, LENGTHOF strIntensityLight
+ 000000CD  8D 35 000000DB R	    LEA ESI, strIntensityLight
+ 000000D3  EB 22		    JMP copy_str
+
+ 000000D5			set_moderate:
+ 000000D5  8D 3D 0000004C R	    LEA EDI, intensitystr
+ 000000DB  B9 00000009		    MOV ECX, LENGTHOF strIntensityModerate
+ 000000E0  8D 35 000000E1 R	    LEA ESI, strIntensityModerate
+
+ 000000E6			set_vigorous:
+ 000000E6  8D 3D 0000004C R	    LEA EDI, intensitystr
+ 000000EC  B9 00000009		    MOV ECX, LENGTHOF strIntensityVigorous
+ 000000F1  8D 35 000000EA R	    LEA ESI, strIntensityVigorous
+
+ 000000F7			copy_str:
+ 000000F7  FC			    CLD
+ 000000F8  F3/ A4		    REP MOVSB
+
+				    ; Display input array
+				    INVOKE OutputStr, ADDR strNewLine
+				    INVOKE OutputStr, ADDR strInputArray
+ 0000010E  B9 00000008		    MOV ECX, 8
+ 00000113  BB 00000004 R	    MOV EBX, OFFSET inputArray
+ 00000118			display_input:
+				    INVOKE OutputInt, DWORD PTR [EBX]
+ 0000011F  49			    DEC ECX
+ 00000120  83 F9 00		    CMP ECX, 0
+ 00000123  74 0F		    JE display_output
+				    INVOKE OutputStr, ADDR strSpace
+ 0000012F  83 C3 04		    ADD EBX, 4
+ 00000132  EB E4		    JMP display_input
+
+ 00000134			display_output:
+				    ; Display output array
+				    INVOKE OutputStr, ADDR strRightBracket  ; Use the defined strRightBracket
+				    INVOKE OutputStr, ADDR strNewLine
+				    INVOKE OutputStr, ADDR strOutputArray
+ 00000152  B9 00000008		    MOV ECX, 8
+ 00000157  BB 00000024 R	    MOV EBX, OFFSET outputArray
+ 0000015C			display_output_loop:
+				    INVOKE OutputInt, DWORD PTR [EBX]
+ 00000163  49			    DEC ECX
+ 00000164  83 F9 00		    CMP ECX, 0
+ 00000167  74 0F		    JE display_intensity
+				    INVOKE OutputStr, ADDR strSpace
+ 00000173  83 C3 04		    ADD EBX, 4
+ 00000176  EB E4		    JMP display_output_loop
+
+ 00000178			display_intensity:
+				    ; Display final intensity message
+				    INVOKE OutputStr, ADDR strRightBracket  ; Use the defined strRightBracket
+				    INVOKE OutputStr, ADDR strNewLine
+				    INVOKE OutputStr, ADDR strFinalIntensity
+				    INVOKE OutputStr, ADDR intensitystr
+				    INVOKE OutputStr, ADDR strNewLine
+				    
+				    ; Ask the user if they want to continue
+				    INVOKE OutputStr, ADDR strContinue
+				    INVOKE InputInt
+ 000001B9  83 F8 00		    CMP EAX, 0
+ 000001BC  74 05		    JE end_program
+ 000001BE  E9 FFFFFE3D		    JMP _start
+
+ 000001C3			end_program:
+					; We call the Operating System ExitProcess system call to close the process.
+				    INVOKE ExitProcess, 0
+ 000001CA
+				END _start
+Microsoft (R) Macro Assembler Version 6.11		    08/08/24 17:01:28
+src\221005009_P03.asm					     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 0000012B DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000001CA DWord	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+$$$$$$00001  . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000001CA Private
+  input_loop . . . . . . . . . .	L Near	 00000033 _TEXT	
+  store_percentage . . . . . . .	L Near	 00000074 _TEXT	
+  calculate_average  . . . . . .	L Near	 0000007A _TEXT	
+  avg_loop . . . . . . . . . . .	L Near	 00000086 _TEXT	
+  finalize . . . . . . . . . . .	L Near	 00000091 _TEXT	
+  set_none . . . . . . . . . . .	L Near	 000000AF _TEXT	
+  set_light  . . . . . . . . . .	L Near	 000000C2 _TEXT	
+  set_moderate . . . . . . . . .	L Near	 000000D5 _TEXT	
+  set_vigorous . . . . . . . . .	L Near	 000000E6 _TEXT	
+  copy_str . . . . . . . . . . .	L Near	 000000F7 _TEXT	
+  display_input  . . . . . . . .	L Near	 00000118 _TEXT	
+  display_output . . . . . . . .	L Near	 00000134 _TEXT	
+  display_output_loop  . . . . .	L Near	 0000015C _TEXT	
+  display_intensity  . . . . . .	L Near	 00000178 _TEXT	
+  end_program  . . . . . . . . .	L Near	 000001C3 _TEXT	
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputStr . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat8 . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputInt  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputStr  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+IO_INC . . . . . . . . . . . . .	Text   	 1
+_start . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public
+age  . . . . . . . . . . . . . .	DWord	 00000000 _DATA	
+average  . . . . . . . . . . . .	DWord	 00000048 _DATA	
+avg_loop . . . . . . . . . . . .	L Near	 00000086 _TEXT	
+calculate_average  . . . . . . .	L Near	 0000007A _TEXT	
+copy_str . . . . . . . . . . . .	L Near	 000000F7 _TEXT	
+display_input  . . . . . . . . .	L Near	 00000118 _TEXT	
+display_intensity  . . . . . . .	L Near	 00000178 _TEXT	
+display_output_loop  . . . . . .	L Near	 0000015C _TEXT	
+display_output . . . . . . . . .	L Near	 00000134 _TEXT	
+end_program  . . . . . . . . . .	L Near	 000001C3 _TEXT	
+finalize . . . . . . . . . . . .	L Near	 00000091 _TEXT	
+inputArray . . . . . . . . . . .	DWord	 00000004 _DATA	
+input_loop . . . . . . . . . . .	L Near	 00000033 _TEXT	
+intensitystr . . . . . . . . . .	Byte	 0000004C _DATA	
+maxHeartRate . . . . . . . . . .	DWord	 00000044 _DATA	
+outputArray  . . . . . . . . . .	DWord	 00000024 _DATA	
+set_light  . . . . . . . . . . .	L Near	 000000C2 _TEXT	
+set_moderate . . . . . . . . . .	L Near	 000000D5 _TEXT	
+set_none . . . . . . . . . . . .	L Near	 000000AF _TEXT	
+set_vigorous . . . . . . . . . .	L Near	 000000E6 _TEXT	
+store_percentage . . . . . . . .	L Near	 00000074 _TEXT	
+strColon . . . . . . . . . . . .	Byte	 00000080 _DATA	
+strContinue  . . . . . . . . . .	Byte	 000000F5 _DATA	
+strFinalIntensity  . . . . . . .	Byte	 000000C4 _DATA	
+strInputArray  . . . . . . . . .	Byte	 00000088 _DATA	
+strIntensityLight  . . . . . . .	Byte	 000000DB _DATA	
+strIntensityModerate . . . . . .	Byte	 000000E1 _DATA	
+strIntensityNone . . . . . . . .	Byte	 000000D6 _DATA	
+strIntensityVigorous . . . . . .	Byte	 000000EA _DATA	
+strNewLine . . . . . . . . . . .	Byte	 00000085 _DATA	
+strOutputArray . . . . . . . . .	Byte	 000000A3 _DATA	
+strPromptAge . . . . . . . . . .	Byte	 0000005C _DATA	
+strPromptHR  . . . . . . . . . .	Byte	 00000068 _DATA	
+strRightBracket  . . . . . . . .	Byte	 000000F3 _DATA	
+strSpace . . . . . . . . . . . .	Byte	 00000083 _DATA	
+
+	   0 Warnings
+	   0 Errors

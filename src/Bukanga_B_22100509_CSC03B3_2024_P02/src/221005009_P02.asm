@@ -19,12 +19,14 @@ ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
     Maximum DWORD   ?
     choice  DWORD   ?   ; To store the user's choice
 
+    ; String prompts
     strHR0  BYTE "Enter Heart Rate 0: ", 0
     strHR1  BYTE "Enter Heart Rate 1: ", 0
     strHR2  BYTE "Enter Heart Rate 2: ", 0
     strHR3  BYTE "Enter Heart Rate 3: ", 0
     strHR4  BYTE "Enter Heart Rate 4: ", 0
     strTotal BYTE "Total: ", 0
+    ;Display strings
     strAverage BYTE "Average Heart Rate: ", 0
     strRoundAverage BYTE "Rounded Average Heart Rate: ", 0
     strMaximum BYTE "Maximum: ", 0
@@ -34,7 +36,7 @@ ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
 
 .CODE
 _start:
-    ; Get user inputs
+    ; get user inputs
     INVOKE  OutputStr, ADDR strHR0
     INVOKE  InputInt
     mov     HR0,    eax
@@ -74,33 +76,32 @@ _start:
     INVOKE  OutputStr, ADDR strAverage
     INVOKE  OutputInt, Average
 
-    ; Calculate decimal part for Average
+    ; calc decimal part for Average
     mov     eax, edx
+    imul     eax, 2
+    mov     ecx, eax
+    INVOKE  OutputStr, ADDR strDecimal
+    INVOKE  OutputInt, ecx
+    INVOKE  OutputStr, ADDR strNL
+
+    ; calculate rounded average
+    mov     eax, Total
     mov     ebx, 5
     cdq
     idiv    ebx
-    INVOKE  OutputStr, ADDR strDecimal
-    INVOKE  OutputInt, eax
-    INVOKE  OutputStr, ADDR strNL
-
-    ; Calculate rounded average
-    mov     eax, Total
-    mov     ebx, 50
-    cdq
-    div    ebx
     mov     RoundedAverage, eax
     test    edx, edx  ; Check if remainder is 0
-    jz      NoRound
+    jz      unRound
     inc     RoundedAverage
 
-NoRound:
+unRound:
     ; Output rounded average
     INVOKE  OutputStr, ADDR strRoundAverage
     mov     eax, RoundedAverage
     INVOKE  OutputInt, eax
     INVOKE  OutputStr, ADDR strNL
 
-    ; Calculate maximum heart rate
+    ; calc maximum
     mov     eax, HR0
     mov     edx, eax
     mov     eax, HR1
@@ -131,14 +132,14 @@ SetMax:
     INVOKE  OutputInt, eax
     INVOKE  OutputStr, ADDR strNL
 
-    ; Ask the user if they want to continue or quit
+    ; Ask user if to continue or quit
     INVOKE  OutputStr, ADDR strContinue
     INVOKE  InputInt
     mov     choice, eax
     cmp     choice, 0
-    je      ExitLoop   ; Jump to exit if the choice is 0
+    je      ExitLoop   ; Jump to exit if 0
     cmp     choice, 1
-    jne     _start     ; If the choice is not 1, re-prompt the user
+    jne     _start     ; If the choice is not 1 jump back to loop
 
     ; Loop back to _start for another iteration
     jmp     _start
