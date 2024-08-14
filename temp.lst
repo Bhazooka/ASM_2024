@@ -1,18 +1,15 @@
-Microsoft (R) Macro Assembler Version 6.11		    08/01/24 15:48:48
+Microsoft (R) Macro Assembler Version 6.11		    08/14/24 23:51:42
 src\temp.asm						     Page 1 - 1
 
 
-				; Author: Your Name
-				; Practical Assignment 02
-				; Course: Computer Science 3B
-				; Assignment date: 2024-08-01
-				; Deadline: 2024-08-01 17h05
+				;	Memo for P04
+				;	Author:     Dr J du Toit
 
 				.386
 				.MODEL FLAT ; Flat memory model
 				.STACK 4096 ; 4096 bytes
 
-				INCLUDE io.inc
+				include	io.inc
 			      C ;
 			      C ; Simple I/O Routines - Version 2
 			      C ;
@@ -34,195 +31,400 @@ src\temp.asm						     Page 1 - 1
 				; Exit function
 				ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
 
+				; The data section stores all global variables
  00000000			.DATA
-				; Input variables and answers
- 00000000 00000000		HR0 DWORD ?
- 00000004 00000000		HR1 DWORD ?
- 00000008 00000000		HR2 DWORD ?
- 0000000C 00000000		HR3 DWORD ?
- 00000010 00000000		HR4 DWORD ?
- 00000014 00000000		avgHR DWORD ?
- 00000018 00000000		sumHR DWORD ?
- 0000001C 00000000		maxHR DWORD ?
- 00000020 00000000		integerPart DWORD ?
- 00000024 00000000		decimalPart DWORD ?
- 00000028 0A 00			newLine BYTE 10, 0
-				; String command prompts
- 0000002A 50 6C 65 61 73	strHRprompt BYTE "Please type the value for HR", 0
-	   65 20 74 79 70
-	   65 20 74 68 65
+					;========================================Input variables =======================================
+ 00000000  00000010 [			inputImage		DWORD			16 DUP (?)
+	    00000000
+	   ]
+ 00000040  00000004 [			kernel			DWORD			4  DUP (?)
+	    00000000
+	   ]
+ 00000050  00000009 [			outputImage		DWORD			9  DUP (0)
+	    00000000
+	   ]
+					
+					;========================================String prompts=========================================
+ 00000074 50 6C 65 61 73		strKernelPrompt BYTE 			"Please provide the kernel value ((>=0):",0
+	   65 20 70 72 6F
+	   76 69 64 65 20
+	   74 68 65 20 6B
+	   65 72 6E 65 6C
 	   20 76 61 6C 75
-	   65 20 66 6F 72
-	   20 48 52 00
- 00000047 3A 00			strColon BYTE ":", 0
- 00000049 41 76 65 72 61	strAvgHR BYTE "Average Heart Rate (rounded up): ", 0
-	   67 65 20 48 65
-	   61 72 74 20 52
-	   61 74 65 20 28
-	   72 6F 75 6E 64
-	   65 64 20 75 70
-	   29 3A 20 00
- 0000006B 41 76 65 72 61	strAvgBefore BYTE "Average Heart Rate (before rounding): ", 0
-	   67 65 20 48 65
-	   61 72 74 20 52
-	   61 74 65 20 28
-	   62 65 66 6F 72
-	   65 20 72 6F 75
-	   6E 64 69 6E 67
-	   29 3A 20 00
- 00000092 4D 61 78 69 6D	strMaxHR BYTE "Maximum Heart Rate: ", 0
-	   75 6D 20 48 65
-	   61 72 74 20 52
-	   61 74 65 3A 20
+	   65 20 28 28 3E
+	   3D 30 29 3A 00
+ 0000009C 50 6C 65 61 73		strCutOff		BYTE			"Please provide the CutOff value:",0
+	   65 20 70 72 6F
+	   76 69 64 65 20
+	   74 68 65 20 43
+	   75 74 4F 66 66
+	   20 76 61 6C 75
+	   65 3A 00
+ 000000BD 50 6C 65 61 73		strInputArr		BYTE			"Please input array item at index ",0
+	   65 20 69 6E 70
+	   75 74 20 61 72
+	   72 61 79 20 69
+	   74 65 6D 20 61
+	   74 20 69 6E 64
+	   65 78 20 00
+ 000000DF 54 68 65 20 6F		strOutputBefore	BYTE			"The output array before the cutoff is ",10,0
+	   75 74 70 75 74
+	   20 61 72 72 61
+	   79 20 62 65 66
+	   6F 72 65 20 74
+	   68 65 20 63 75
+	   74 6F 66 66 20
+	   69 73 20 0A 00
+ 00000107 54 68 65 20 6F		strOutputAfter	BYTE			"The output array after the cutoff is ",10,0
+	   75 74 70 75 74
+	   20 61 72 72 61
+	   79 20 61 66 74
+	   65 72 20 74 68
+	   65 20 63 75 74
+	   6F 66 66 20 69
+	   73 20 0A 00
+ 0000012E 3A 00				strColon		BYTE			":",0
+ 00000130 0A 00				strNL			BYTE			10,0
+ 00000132 54 79 70 65 20		strQuit			BYTE			"Type 0 to quit:",0
+	   30 20 74 6F 20
+	   71 75 69 74 3A
 	   00
- 000000A7 54 79 70 65 20	strQuit BYTE "Type a zero to quit, any other number to run again: ", 0
-	   61 20 7A 65 72
-	   6F 20 74 6F 20
-	   71 75 69 74 2C
-	   20 61 6E 79 20
-	   6F 74 68 65 72
-	   20 6E 75 6D 62
-	   65 72 20 74 6F
-	   20 72 75 6E 20
-	   61 67 61 69 6E
-	   3A 20 00
-
+ 00000142 09 00				strTab			BYTE			9,0
+ 00000144 5B 00				strOpenBracket	BYTE			"[",0
+ 00000146 5D 00				strCloseBracket BYTE			"]",0
+ 00000148 2C 00				strComma		BYTE			",",0
+					
  00000000			.CODE
  00000000			_start:
- 00000000			    ; Initialize the counter
- 00000000  B9 00000000		    MOV ecx, 0
+ 00000000				;Create the stack frame for local variables
+ 00000000  55				push			ebp
+ 00000001  8B EC			mov				ebp,esp
+					;Local variables
+					;row			[ebp-4]
+					;col			[ebp-8]
+					;cutoff			[ebp-12]
+					;rowOffset		[ebp-16]
+					;colOffset		[ebp-20]
+ 00000003  83 EC 14			sub				esp,20
+					;Initialise the local variables
+ 00000006  C7 45 FC			mov				DWORD PTR [ebp-4],0				;row = 0
+	   00000000
+ 0000000D  C7 45 F8			mov				DWORD PTR [ebp-8],0				;col = 0
+	   00000000
+					
+					
+					;===================================Get the input array===========================================
+ 00000014			InputLoopStart:
+					INVOKE			OutputStr, ADDR strInputArr
+					INVOKE			OutputStr, ADDR strOpenBracket
+					INVOKE			OutputInt, DWORD PTR [ebp-4]
+					INVOKE			OutputStr, ADDR strComma
+					INVOKE			OutputInt, DWORD PTR [ebp-8]
+					INVOKE			OutputStr, ADDR strCloseBracket
+					INVOKE			OutputStr, ADDR strColon
+					
+					; Calculate the 1D array index
+					; row * columns + col 
+ 00000056  6B 45 FC 04			imul			eax,DWORD PTR [ebp-4],4			; row * 4 (num of cols)
+ 0000005A  03 45 F8			add 			eax,DWORD PTR [ebp-8]			; index = row * 4 + col 
+ 0000005D  6B C0 04			imul			eax,4
+					; Access the array address
+ 00000060  8D 1D 00000000 R		lea				ebx,inputImage
+ 00000066  03 D8			add				ebx,eax
+					; Get the input
+					INVOKE			InputInt
+ 0000006D  89 03			mov				[ebx],eax
+					;if(col!=3) then inc col
+					;   else inc row and set col=0
+ 0000006F  83 7D F8 03			cmp				DWORD PTR [ebp-8],3
+ 00000073  75 12			jne				IncColA
+					;if(row==3) then exit the loop
+ 00000075  83 7D FC 03			cmp				DWORD PTR [ebp-4],3
+ 00000079  74 11			je				InputLoopEnd
+					;row!=3 but col ==3
+ 0000007B  FF 45 FC			inc				DWORD PTR [ebp-4]
+ 0000007E  C7 45 F8			mov				DWORD PTR [ebp-8],0
+	   00000000
+ 00000085  EB 8D			jmp				InputLoopStart
+					
+ 00000087			IncColA:
+ 00000087  FF 45 F8			inc				DWORD PTR [ebp-8]
+ 0000008A  EB 88			jmp				InputLoopStart
+ 0000008C			InputLoopEnd:
 
- 00000005			InputHR:
-				    ; Prompt the user
-				    INVOKE OutputStr, ADDR strHRprompt
-				    INVOKE OutputStr, ADDR strColon
-				    INVOKE InputInt
- 0000001E  8B D0		    MOV edx, eax ; Store input in edx
+					;===================================Get the kernel array===========================================
+					;Initialise the local variables
+ 0000008C  C7 45 FC			mov				DWORD PTR [ebp-4],0				;row = 0
+	   00000000
+ 00000093  C7 45 F8			mov				DWORD PTR [ebp-8],0				;col = 0
+	   00000000
+ 0000009A			KernelLoopStart:
+					INVOKE			OutputStr, ADDR strKernelPrompt
+					INVOKE			OutputStr, ADDR strOpenBracket
+					INVOKE			OutputInt, DWORD PTR [ebp-4]
+					INVOKE			OutputStr, ADDR strComma
+					INVOKE			OutputInt, DWORD PTR [ebp-8]
+					INVOKE			OutputStr, ADDR strCloseBracket
+					INVOKE			OutputStr, ADDR strColon
+					
+					; Calculate the 1D array index
+					; row * columns + col 
+ 000000DC  6B 45 FC 02			imul			eax,DWORD PTR [ebp-4],2			; row * 2 (num of cols)
+ 000000E0  03 45 F8			add 			eax,DWORD PTR [ebp-8]			; index = row * 2 + col 
+ 000000E3  6B C0 04			imul			eax,4							; Get the DWORD offset
+					; Access the array address
+ 000000E6  8D 1D 00000040 R		lea				ebx,kernel
+ 000000EC  03 D8			add				ebx,eax
+					; Get the input
+					INVOKE			InputInt
+ 000000F3  89 03			mov				[ebx],eax
+					;if(col!=1) then inc col
+					;   else inc row and set col=0
+ 000000F5  83 7D F8 01			cmp				DWORD PTR [ebp-8],1
+ 000000F9  75 12			jne				IncColB
+					;if(row==1) then exit the loop
+ 000000FB  83 7D FC 01			cmp				DWORD PTR [ebp-4],1
+ 000000FF  74 11			je				KernelLoopEnd
+					;row!=1 but col ==1
+ 00000101  FF 45 FC			inc				DWORD PTR [ebp-4]
+ 00000104  C7 45 F8			mov				DWORD PTR [ebp-8],0
+	   00000000
+ 0000010B  EB 8D			jmp				KernelLoopStart
+					
+ 0000010D			IncColB:
+ 0000010D  FF 45 F8			inc				DWORD PTR [ebp-8]
+ 00000110  EB 88			jmp				KernelLoopStart
+ 00000112			KernelLoopEnd:
 
- 00000020  83 F9 00		    CMP ecx, 0
- 00000023  74 16		    JE StoreHR0
- 00000025  83 F9 01		    CMP ecx, 1
- 00000028  74 19		    JE StoreHR1
- 0000002A  83 F9 02		    CMP ecx, 2
- 0000002D  74 1C		    JE StoreHR2
- 0000002F  83 F9 03		    CMP ecx, 3
- 00000032  74 1F		    JE StoreHR3
- 00000034  83 F9 04		    CMP ecx, 4
- 00000037  74 22		    JE StoreHR4
- 00000039  EB CA		    JMP InputHR ; Continue asking if invalid input
+					;Get the cutoff value:
+					INVOKE			OutputStr, ADDR strCutOff
+					INVOKE			InputInt
+ 00000121  89 45 F4			mov				DWORD PTR [ebp-12],eax
+					
+					;==========================================Apply the kernel=======================================
+					;for(int rowOffset=0;rowOffset<3;rowOffset++)
+				    ;{
+				    ;    for(int colOffset=0;colOffset<3;colOffset++)
+				    ;    {
+				    ;        for(int row=0;row<2;row++)
+				    ;        {
+				    ;            for(int col=0;col<2;col++)
+				    ;            {
+				    ;                std::cout << "[" << row+rowOffset << "," << col+colOffset << "],";
+				    ;                std::cout <<"\t["<< row << ","<< col << "], \t ";
+				    ;            }
+				    ;            std::cout << std::endl;
+				    ;        }
+				    ;        std::cout << std::endl;
+				    ;    }
+				    ;}
+					;row			[ebp-4]
+					;col			[ebp-8]
+					;rowOffset		[ebp-16]
+					;colOffset		[ebp-20]
+ 00000124  C7 45 FC			mov					DWORD PTR [ebp-4],0
+	   00000000
+ 0000012B  C7 45 F8			mov					DWORD PTR [ebp-8],0		
+	   00000000
+ 00000132  C7 45 EC			mov					DWORD PTR [ebp-20],0			;colOffset = 0
+	   00000000
+					
+ 00000139  C7 45 F0			mov					DWORD PTR [ebp-16],0			;rowOffset = 0
+	   00000000
+ 00000140			OuterRowLoopStart:
+ 00000140  83 7D F0 03			cmp					DWORD PTR [ebp-16],3			;if(rowOffset>=3) exit OuterRowLoopStart
+ 00000144  0F 8D 0000008F		jge					OuterRowLoopEnd
+ 0000014A  C7 45 EC			mov					DWORD PTR [ebp-20],0
+	   00000000
+ 00000151				OuterColLoopStart:
+ 00000151  83 7D EC 03				cmp				DWORD PTR [ebp-20],3
+ 00000155  7D 7A				jge				OuterColLoopEnd
+ 00000157  C7 45 FC				mov				DWORD PTR [ebp-4],0
+	   00000000
+ 0000015E					InnerRowLoopStart:
+ 0000015E  83 7D FC 02					cmp			DWORD PTR [ebp-4],2
+ 00000162  7D 68					jge			InnerRowLoopEnd
+ 00000164  C7 45 F8					mov			DWORD PTR [ebp-8],0
+	   00000000
+ 0000016B						InnerColLoopStart:
+ 0000016B  83 7D F8 02						cmp		DWORD PTR [ebp-8],2
+ 0000016F  7D 56						jge		InnerColLoopEnd
+								;Get the value from the InputArray
+								;r=row+rowOffset * 4 + col+colOffset
+								;r=eax
+ 00000171  8B 45 FC						mov		eax,DWORD PTR [ebp-4]
+ 00000174  03 45 F0						add		eax,DWORD PTR [ebp-16]
+ 00000177  6B C0 04						imul	eax,4
+								;col+colOffset
+ 0000017A  8B 5D F8						mov		ebx,DWORD PTR [ebp-8]
+ 0000017D  03 5D EC						add		ebx,DWORD PTR [ebp-20]
+								;r=row+rowOffset * 4 + col+colOffset
+ 00000180  03 C3						add		eax,ebx 
+								;Calulate the memory offset
+ 00000182  6B C0 04						imul	eax,4
+								
+								;We get the base address of the inputImage
+ 00000185  8D 1D 00000000 R					lea		ebx,inputImage
+ 0000018B  03 D8						add		ebx,eax
+ 0000018D  8B 0B						mov		ecx,[ebx]		;Stores the value from the input array into temp
+								
+								;Get the kernel value
+								;r=row * 2 + col
+								;r=eax
+ 0000018F  8B 45 FC						mov		eax,DWORD PTR [ebp-4]
+ 00000192  6B C0 02						imul	eax,2
+								;col+colOffset
+ 00000195  8B 5D F8						mov		ebx,DWORD PTR [ebp-8]
+								;r=row * 2 + col
+ 00000198  03 C3						add		eax,ebx 
+								;Calulate the memory offset
+ 0000019A  6B C0 04						imul	eax,4
+								
+								;We get the value that is in the kernel
+ 0000019D  8D 1D 00000040 R					lea		ebx,kernel
+ 000001A3  03 D8						add		ebx,eax
+ 000001A5  8B 03						mov		eax,[ebx]		;Store the kernel array item in accumulator
+								;I[r+offset,c+offset] * k[r,c]
+ 000001A7  0F AF C1						imul	eax,ecx
+ 000001AA  8B C8						mov		ecx,eax			;Temporarily store the answer in ecx 
 
- 0000003B			StoreHR0:
- 0000003B  89 15 00000000 R	    MOV HR0, edx
- 00000041  EB 1E		    JMP IncCounter
- 00000043			StoreHR1:
- 00000043  89 15 00000004 R	    MOV HR1, edx
- 00000049  EB 16		    JMP IncCounter
- 0000004B			StoreHR2:
- 0000004B  89 15 00000008 R	    MOV HR2, edx
- 00000051  EB 0E		    JMP IncCounter
- 00000053			StoreHR3:
- 00000053  89 15 0000000C R	    MOV HR3, edx
- 00000059  EB 06		    JMP IncCounter
- 0000005B			StoreHR4:
- 0000005B  89 15 00000010 R	    MOV HR4, edx
+								;Store the answer in the output array
+								;Get the row value of the output array 
+ 000001AC  8B 45 F0						mov		eax,DWORD PTR [ebp-16]				;rowOffset
+ 000001AF  6B C0 03						imul	eax,3								;rowOffset * 3
+ 000001B2  03 45 EC						add		eax,DWORD PTR [ebp-20]				;rowOffset * 3 + colOffset
+ 000001B5  6B C0 04						imul	eax,4								;Convert to memory spaces
+								
+ 000001B8  8D 1D 00000050 R					lea		ebx,outputImage
+ 000001BE  03 D8						add		ebx,eax
+ 000001C0  01 0B						add		[ebx],ecx							;outputImage[rowOffset,colOffset] += i[r+rowOffset][c+colOffset] + k[r][c]
+								
+								
+ 000001C2  FF 45 F8						inc		DWORD PTR [ebp-8]
+ 000001C5  EB A4						jmp		InnerColLoopStart
+ 000001C7						InnerColLoopEnd:
+ 000001C7  FF 45 FC					inc			DWORD PTR [ebp-4]
+ 000001CA  EB 92					jmp			InnerRowLoopStart
+ 000001CC					InnerRowLoopEnd:
+ 000001CC  FF 45 EC				inc				DWORD PTR [ebp-20]
+ 000001CF  EB 80				jmp				OuterColLoopStart
+ 000001D1				OuterColLoopEnd:
+ 000001D1  FF 45 F0			inc					DWORD PTR [ebp-16]
+ 000001D4  E9 FFFFFF67			jmp					OuterRowLoopStart
+ 000001D9			OuterRowLoopEnd:
 
- 00000061			IncCounter:
- 00000061  41			    INC ecx
- 00000062  83 F9 05		    CMP ecx, 5
- 00000065  7C 9E		    JL InputHR ; Continue inputting if less than 5
- 00000067  EB 00		    JMP Calculate
+					;============================================Output the output image ======================================================
+					INVOKE			OutputStr,ADDR strOutputBefore
+					
+					;Initialise the local variables
+ 000001E3  C7 45 FC			mov				DWORD PTR [ebp-4],0				;row = 0
+	   00000000
+ 000001EA  C7 45 F8			mov				DWORD PTR [ebp-8],0				;col = 0
+	   00000000
+ 000001F1			OutputLoopStart:
+					
+					; Calculate the 1D array index
+					; row * columns + col 
+ 000001F1  6B 45 FC 03			imul			eax,DWORD PTR [ebp-4],3			; row * 3 (num of cols)
+ 000001F5  03 45 F8			add 			eax,DWORD PTR [ebp-8]			; index = row * 3 + col 
+ 000001F8  6B C0 04			imul			eax,4							; Get the DWORD offset
+					; Access the array address
+ 000001FB  8D 1D 00000050 R		lea				ebx,outputImage
+ 00000201  03 D8			add				ebx,eax
+ 00000203  8B 03			mov				eax,[ebx]						;Get the value from the OutputArray
+					INVOKE			OutputInt,eax
+					INVOKE			OutputStr,ADDR strComma
+					INVOKE			OutputStr,ADDR strTab
 
- 00000069			Calculate:
-				    ; Calculate sum of heart rates
- 00000069  A1 00000000 R	    MOV eax, HR0
- 0000006E  03 05 00000004 R	    ADD eax, HR1
- 00000074  03 05 00000008 R	    ADD eax, HR2
- 0000007A  03 05 0000000C R	    ADD eax, HR3
- 00000080  03 05 00000010 R	    ADD eax, HR4
- 00000086  A3 00000018 R	    MOV sumHR, eax
+					;if(col!=1) then inc col
+					;   else inc row and set col=0
+ 0000021F  83 7D F8 02			cmp				DWORD PTR [ebp-8],2
+ 00000223  75 1C			jne				IncColC
+					;if(row==1) then exit the loop
+ 00000225  83 7D FC 02			cmp				DWORD PTR [ebp-4],2
+ 00000229  74 1B			je				OutputLoopEnd
+					;row!=1 but col ==1
+ 0000022B  FF 45 FC			inc				DWORD PTR [ebp-4]
+ 0000022E  C7 45 F8			mov				DWORD PTR [ebp-8],0
+	   00000000
+					INVOKE			OutputStr,ADDR strNL
+ 0000023F  EB B0			jmp				OutputLoopStart
+					
+ 00000241			IncColC:
+ 00000241  FF 45 F8			inc				DWORD PTR [ebp-8]
+ 00000244  EB AB			jmp				OutputLoopStart
+ 00000246			OutputLoopEnd:
+					INVOKE			OutputStr,ADDR strNL
+					
+					;============================================Output the output image after CutOff ======================================================
+					INVOKE			OutputStr,ADDR strOutputAfter
+					
+					;Initialise the local variables
+ 0000025A  C7 45 FC			mov				DWORD PTR [ebp-4],0				;row = 0
+	   00000000
+ 00000261  C7 45 F8			mov				DWORD PTR [ebp-8],0				;col = 0
+	   00000000
+ 00000268			OutputLoopStartA:
+					
+					; Calculate the 1D array index
+					; row * columns + col 
+ 00000268  6B 45 FC 03			imul			eax,DWORD PTR [ebp-4],3			; row * 3 (num of cols)
+ 0000026C  03 45 F8			add 			eax,DWORD PTR [ebp-8]			; index = row * 3 + col 
+ 0000026F  6B C0 04			imul			eax,4							; Get the DWORD offset
+					; Access the array address
+ 00000272  8D 1D 00000050 R		lea				ebx,outputImage
+ 00000278  03 D8			add				ebx,eax
+ 0000027A  8B 03			mov				eax,[ebx]						;Get the value from the OutputArray
+					; if(output[r][c]>=cutoff) then eax 1
+					;	else eax=0
+ 0000027C  3B 45 F4			cmp				eax,DWORD PTR [ebp-12]
+ 0000027F  7D 07			jge				GreaterThan
+ 00000281  B8 00000000			mov				eax,0
+ 00000286  EB 05			jmp				WriteValue
+ 00000288			GreaterThan:
+ 00000288  B8 00000001			mov				eax,1
+ 0000028D			WriteValue:
+					INVOKE			OutputInt,eax
+					INVOKE			OutputStr,ADDR strComma
+					INVOKE			OutputStr,ADDR strTab
 
-				    ; Calculate average heart rate (before rounding)
- 0000008B  A1 00000018 R	    MOV eax, sumHR
- 00000090  BB 00000005		    MOV ebx, 5
- 00000095  33 D2		    XOR edx, edx
- 00000097  F7 F3		    DIV ebx
- 00000099  A3 00000020 R	    MOV integerPart, eax
- 0000009E  89 15 00000024 R	    MOV decimalPart, edx
-
-				    ; Output average before rounding with decimal
-				    INVOKE OutputStr, ADDR strAvgBefore
- 000000AE  A1 00000020 R	    MOV eax, integerPart
-				    INVOKE OutputInt, eax
- 000000B9  A1 00000024 R	    MOV eax, decimalPart
-				    ; Convert decimal part to ASCII (divide by 10 to get first decimal place)
- 000000BE  BB 0000000A		    MOV ebx, 10
- 000000C3  F7 F3		    DIV ebx
- 000000C5  04 30		    ADD al, '0'  ; Convert to ASCII
-				    INVOKE OutputStr, ADDR newLine
-
-				    ; Calculate average heart rate (rounded up)
- 000000D1  A1 00000018 R	    MOV eax, sumHR
- 000000D6  BB 00000005		    MOV ebx, 5
- 000000DB  33 D2		    XOR edx, edx
- 000000DD  F7 F3		    DIV ebx
- 000000DF  83 FA 00		    CMP edx, 0
- 000000E2  74 01		    JZ SkipRound
- 000000E4  40			    INC eax
- 000000E5			SkipRound:
- 000000E5  A3 00000014 R	    MOV avgHR, eax
-
-				    ; Calculate maximum heart rate
- 000000EA  A1 00000000 R	    MOV eax, HR0
- 000000EF  8B D0		    MOV edx, eax
- 000000F1  A1 00000004 R	    MOV eax, HR1
- 000000F6  3B C2		    CMP eax, edx
- 000000F8  7E 02		    JLE UpdateMaxHR
- 000000FA  8B D0		    MOV edx, eax
- 000000FC			UpdateMaxHR:
- 000000FC  A1 00000008 R	    MOV eax, HR2
- 00000101  3B C2		    CMP eax, edx
- 00000103  7E 02		    JLE UpdateMaxHR2
- 00000105  8B D0		    MOV edx, eax
- 00000107			UpdateMaxHR2:
- 00000107  A1 0000000C R	    MOV eax, HR3
- 0000010C  3B C2		    CMP eax, edx
- 0000010E  7E 02		    JLE UpdateMaxHR3
- 00000110  8B D0		    MOV edx, eax
- 00000112			UpdateMaxHR3:
- 00000112  A1 00000010 R	    MOV eax, HR4
- 00000117  3B C2		    CMP eax, edx
- 00000119  7E 02		    JLE Done
- 0000011B  8B D0		    MOV edx, eax
- 0000011D			Done:
- 0000011D  89 15 0000001C R	    MOV maxHR, edx
-
- 00000123			OutputResults:
-				    ; Output average heart rate (rounded up)
-				    INVOKE OutputStr, ADDR strAvgHR
- 0000012D  A1 00000014 R	    MOV eax, avgHR
-				    INVOKE OutputInt, eax
-				    INVOKE OutputStr, ADDR newLine
-
-				    ; Output maximum heart rate
-				    INVOKE OutputStr, ADDR strMaxHR
- 0000014C  A1 0000001C R	    MOV eax, maxHR
-				    INVOKE OutputInt, eax
-				    INVOKE OutputStr, ADDR newLine
-
-				    ; Prompt to continue or quit
-				    INVOKE OutputStr, ADDR strQuit
-				    INVOKE InputInt
- 00000170  83 F8 00		    CMP eax, 0
- 00000173  74 05		    JE ExitProgram
- 00000175  E9 FFFFFE86		    JMP _start
-
- 0000017A			ExitProgram:
-				    ; Exit the program
-				    INVOKE ExitProcess, 0
-
- 00000181			Public _start
+					;if(col!=1) then inc col
+					;   else inc row and set col=0
+ 000002A7  83 7D F8 02			cmp				DWORD PTR [ebp-8],2
+ 000002AB  75 1C			jne				IncColD
+					;if(row==1) then exit the loop
+ 000002AD  83 7D FC 02			cmp				DWORD PTR [ebp-4],2
+ 000002B1  74 1B			je				OutputLoopEndA
+					;row!=1 but col ==1
+ 000002B3  FF 45 FC			inc				DWORD PTR [ebp-4]
+ 000002B6  C7 45 F8			mov				DWORD PTR [ebp-8],0
+	   00000000
+					INVOKE			OutputStr,ADDR strNL
+ 000002C7  EB 9F			jmp				OutputLoopStartA
+					
+ 000002C9			IncColD:
+ 000002C9  FF 45 F8			inc				DWORD PTR [ebp-8]
+ 000002CC  EB 9A			jmp				OutputLoopStartA
+ 000002CE			OutputLoopEndA:
+					INVOKE			OutputStr,ADDR strNL
+					
+					;===================================Loop until the user quits=============================================
+					INVOKE			OutputStr, ADDR strQuit
+					INVOKE			InputInt
+ 000002E7  83 F8 00			cmp				eax,0
+ 000002EA  0F 85 FFFFFD10		jne				_start
+					
+					; Destroy the stack frame
+ 000002F0  8B E5			mov				esp,ebp
+ 000002F2  5D				pop				ebp
+					; We call the Operating System ExitProcess system call to close the process.
+					INVOKE ExitProcess, 0
+ 000002FA			Public _start
 				END
-Microsoft (R) Macro Assembler Version 6.11		    08/01/24 15:48:48
+
+
+				    
+Microsoft (R) Macro Assembler Version 6.11		    08/14/24 23:51:42
 src\temp.asm						     Symbols 2 - 1
 
 
@@ -234,30 +436,37 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
-_DATA  . . . . . . . . . . . . .	32 Bit	 000000DC DWord	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 00000181 DWord	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 0000014A DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000002FA DWord	  Public  'CODE'	
 
 
 Procedures,  parameters and locals:
 
                 N a m e                 Type     Value    Attr
 
-$$$$$$00001  . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000181 Private
-  InputHR  . . . . . . . . . . .	L Near	 00000005 _TEXT	
-  StoreHR0 . . . . . . . . . . .	L Near	 0000003B _TEXT	
-  StoreHR1 . . . . . . . . . . .	L Near	 00000043 _TEXT	
-  StoreHR2 . . . . . . . . . . .	L Near	 0000004B _TEXT	
-  StoreHR3 . . . . . . . . . . .	L Near	 00000053 _TEXT	
-  StoreHR4 . . . . . . . . . . .	L Near	 0000005B _TEXT	
-  IncCounter . . . . . . . . . .	L Near	 00000061 _TEXT	
-  Calculate  . . . . . . . . . .	L Near	 00000069 _TEXT	
-  SkipRound  . . . . . . . . . .	L Near	 000000E5 _TEXT	
-  UpdateMaxHR  . . . . . . . . .	L Near	 000000FC _TEXT	
-  UpdateMaxHR2 . . . . . . . . .	L Near	 00000107 _TEXT	
-  UpdateMaxHR3 . . . . . . . . .	L Near	 00000112 _TEXT	
-  Done . . . . . . . . . . . . .	L Near	 0000011D _TEXT	
-  OutputResults  . . . . . . . .	L Near	 00000123 _TEXT	
-  ExitProgram  . . . . . . . . .	L Near	 0000017A _TEXT	
+$$$$$$00001  . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000002FA Private
+  InputLoopStart . . . . . . . .	L Near	 00000014 _TEXT	
+  IncColA  . . . . . . . . . . .	L Near	 00000087 _TEXT	
+  InputLoopEnd . . . . . . . . .	L Near	 0000008C _TEXT	
+  KernelLoopStart  . . . . . . .	L Near	 0000009A _TEXT	
+  IncColB  . . . . . . . . . . .	L Near	 0000010D _TEXT	
+  KernelLoopEnd  . . . . . . . .	L Near	 00000112 _TEXT	
+  OuterRowLoopStart  . . . . . .	L Near	 00000140 _TEXT	
+  OuterColLoopStart  . . . . . .	L Near	 00000151 _TEXT	
+  InnerRowLoopStart  . . . . . .	L Near	 0000015E _TEXT	
+  InnerColLoopStart  . . . . . .	L Near	 0000016B _TEXT	
+  InnerColLoopEnd  . . . . . . .	L Near	 000001C7 _TEXT	
+  InnerRowLoopEnd  . . . . . . .	L Near	 000001CC _TEXT	
+  OuterColLoopEnd  . . . . . . .	L Near	 000001D1 _TEXT	
+  OuterRowLoopEnd  . . . . . . .	L Near	 000001D9 _TEXT	
+  OutputLoopStart  . . . . . . .	L Near	 000001F1 _TEXT	
+  IncColC  . . . . . . . . . . .	L Near	 00000241 _TEXT	
+  OutputLoopEnd  . . . . . . . .	L Near	 00000246 _TEXT	
+  OutputLoopStartA . . . . . . .	L Near	 00000268 _TEXT	
+  GreaterThan  . . . . . . . . .	L Near	 00000288 _TEXT	
+  WriteValue . . . . . . . . . .	L Near	 0000028D _TEXT	
+  IncColD  . . . . . . . . . . .	L Near	 000002C9 _TEXT	
+  OutputLoopEndA . . . . . . . .	L Near	 000002CE _TEXT	
 ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 InputInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 InputStr . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -280,40 +489,45 @@ Symbols:
 @fardata?  . . . . . . . . . . .	Text   	 FLAT
 @fardata . . . . . . . . . . . .	Text   	 FLAT
 @stack . . . . . . . . . . . . .	Text   	 FLAT
-Calculate  . . . . . . . . . . .	L Near	 00000069 _TEXT	
-Done . . . . . . . . . . . . . .	L Near	 0000011D _TEXT	
-ExitProgram  . . . . . . . . . .	L Near	 0000017A _TEXT	
-HR0  . . . . . . . . . . . . . .	DWord	 00000000 _DATA	
-HR1  . . . . . . . . . . . . . .	DWord	 00000004 _DATA	
-HR2  . . . . . . . . . . . . . .	DWord	 00000008 _DATA	
-HR3  . . . . . . . . . . . . . .	DWord	 0000000C _DATA	
-HR4  . . . . . . . . . . . . . .	DWord	 00000010 _DATA	
+GreaterThan  . . . . . . . . . .	L Near	 00000288 _TEXT	
 IO_INC . . . . . . . . . . . . .	Text   	 1
-IncCounter . . . . . . . . . . .	L Near	 00000061 _TEXT	
-InputHR  . . . . . . . . . . . .	L Near	 00000005 _TEXT	
-OutputResults  . . . . . . . . .	L Near	 00000123 _TEXT	
-SkipRound  . . . . . . . . . . .	L Near	 000000E5 _TEXT	
-StoreHR0 . . . . . . . . . . . .	L Near	 0000003B _TEXT	
-StoreHR1 . . . . . . . . . . . .	L Near	 00000043 _TEXT	
-StoreHR2 . . . . . . . . . . . .	L Near	 0000004B _TEXT	
-StoreHR3 . . . . . . . . . . . .	L Near	 00000053 _TEXT	
-StoreHR4 . . . . . . . . . . . .	L Near	 0000005B _TEXT	
-UpdateMaxHR2 . . . . . . . . . .	L Near	 00000107 _TEXT	
-UpdateMaxHR3 . . . . . . . . . .	L Near	 00000112 _TEXT	
-UpdateMaxHR  . . . . . . . . . .	L Near	 000000FC _TEXT	
+IncColA  . . . . . . . . . . . .	L Near	 00000087 _TEXT	
+IncColB  . . . . . . . . . . . .	L Near	 0000010D _TEXT	
+IncColC  . . . . . . . . . . . .	L Near	 00000241 _TEXT	
+IncColD  . . . . . . . . . . . .	L Near	 000002C9 _TEXT	
+InnerColLoopEnd  . . . . . . . .	L Near	 000001C7 _TEXT	
+InnerColLoopStart  . . . . . . .	L Near	 0000016B _TEXT	
+InnerRowLoopEnd  . . . . . . . .	L Near	 000001CC _TEXT	
+InnerRowLoopStart  . . . . . . .	L Near	 0000015E _TEXT	
+InputLoopEnd . . . . . . . . . .	L Near	 0000008C _TEXT	
+InputLoopStart . . . . . . . . .	L Near	 00000014 _TEXT	
+KernelLoopEnd  . . . . . . . . .	L Near	 00000112 _TEXT	
+KernelLoopStart  . . . . . . . .	L Near	 0000009A _TEXT	
+OuterColLoopEnd  . . . . . . . .	L Near	 000001D1 _TEXT	
+OuterColLoopStart  . . . . . . .	L Near	 00000151 _TEXT	
+OuterRowLoopEnd  . . . . . . . .	L Near	 000001D9 _TEXT	
+OuterRowLoopStart  . . . . . . .	L Near	 00000140 _TEXT	
+OutputLoopEndA . . . . . . . . .	L Near	 000002CE _TEXT	
+OutputLoopEnd  . . . . . . . . .	L Near	 00000246 _TEXT	
+OutputLoopStartA . . . . . . . .	L Near	 00000268 _TEXT	
+OutputLoopStart  . . . . . . . .	L Near	 000001F1 _TEXT	
+WriteValue . . . . . . . . . . .	L Near	 0000028D _TEXT	
 _start . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public
-avgHR  . . . . . . . . . . . . .	DWord	 00000014 _DATA	
-decimalPart  . . . . . . . . . .	DWord	 00000024 _DATA	
-integerPart  . . . . . . . . . .	DWord	 00000020 _DATA	
-maxHR  . . . . . . . . . . . . .	DWord	 0000001C _DATA	
-newLine  . . . . . . . . . . . .	Byte	 00000028 _DATA	
-strAvgBefore . . . . . . . . . .	Byte	 0000006B _DATA	
-strAvgHR . . . . . . . . . . . .	Byte	 00000049 _DATA	
-strColon . . . . . . . . . . . .	Byte	 00000047 _DATA	
-strHRprompt  . . . . . . . . . .	Byte	 0000002A _DATA	
-strMaxHR . . . . . . . . . . . .	Byte	 00000092 _DATA	
-strQuit  . . . . . . . . . . . .	Byte	 000000A7 _DATA	
-sumHR  . . . . . . . . . . . . .	DWord	 00000018 _DATA	
+inputImage . . . . . . . . . . .	DWord	 00000000 _DATA	
+kernel . . . . . . . . . . . . .	DWord	 00000040 _DATA	
+outputImage  . . . . . . . . . .	DWord	 00000050 _DATA	
+strCloseBracket  . . . . . . . .	Byte	 00000146 _DATA	
+strColon . . . . . . . . . . . .	Byte	 0000012E _DATA	
+strComma . . . . . . . . . . . .	Byte	 00000148 _DATA	
+strCutOff  . . . . . . . . . . .	Byte	 0000009C _DATA	
+strInputArr  . . . . . . . . . .	Byte	 000000BD _DATA	
+strKernelPrompt  . . . . . . . .	Byte	 00000074 _DATA	
+strNL  . . . . . . . . . . . . .	Byte	 00000130 _DATA	
+strOpenBracket . . . . . . . . .	Byte	 00000144 _DATA	
+strOutputAfter . . . . . . . . .	Byte	 00000107 _DATA	
+strOutputBefore  . . . . . . . .	Byte	 000000DF _DATA	
+strQuit  . . . . . . . . . . . .	Byte	 00000132 _DATA	
+strTab . . . . . . . . . . . . .	Byte	 00000142 _DATA	
 
 	   0 Warnings
 	   0 Errors
