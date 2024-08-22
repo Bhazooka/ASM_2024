@@ -1,0 +1,319 @@
+Microsoft (R) Macro Assembler Version 6.11		    08/15/24 16:50:40
+src\221005009_P04.asm					     Page 1 - 1
+
+
+				;	Author: B Bukanga
+				;	Template document
+				.386
+				.MODEL FLAT ; Flat memory model
+				.STACK 4096 ; 4096 bytes
+				INCLUDE io.inc
+			      C ;
+			      C ; Simple I/O Routines - Version 2
+			      C ;
+			      C 
+			      C IFNDEF IO_INC
+ = 1			      C IO_INC equ <1>
+			      C 
+			      C OutputStr PROTO NEAR32 STDCALL :DWORD
+			      C OutputInt PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat8 PROTO NEAR32 STDCALL :QWORD
+			      C InputInt PROTO NEAR32 STDCALL
+			      C InputStr PROTO NEAR32 STDCALL :DWORD, :DWORD
+			      C 
+			      C ELSE
+			      C ENDIF
+			      C 
+
+				ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
+
+				; The data section global variables
+ 00000000			.DATA
+				;Constant variables
+ 00000000  00000003 [		HR		        DWORD		3 DUP (?)
+	    00000000
+	   ]
+ 0000000C  00000003 [		HRF             DWORD       3 DUP (?)
+	    00000000
+	   ]
+
+				;User prompts 
+ 00000018 45 6E 74 65 72	strAge          BYTE        "Enter age: ",0
+	   20 61 67 65 3A
+	   20 00
+ 00000024 45 6E 74 65 72	strRHR          BYTE        "Enter RHR value: ",0
+	   20 52 48 52 20
+	   76 61 6C 75 65
+	   3A 20 00
+ 00000036 45 6E 74 65 72	strCMul         BYTE        "Enter CMul value: ",0
+	   20 43 4D 75 6C
+	   20 76 61 6C 75
+	   65 3A 20 00
+ 00000049 45 6E 74 65 72	strHR           BYTE        "Enter HR value at index ",0
+	   20 48 52 20 76
+	   61 6C 75 65 20
+	   61 74 20 69 6E
+	   64 65 78 20 00
+ 00000062 41 67 65 20 76	AgeValue        BYTE        "Age value is: ",0
+	   61 6C 75 65 20
+	   69 73 3A 20 00
+ 00000071 52 48 52 20 76	RHRValue        BYTE        "RHR value is: ",0
+	   61 6C 75 65 20
+	   69 73 3A 20 00
+ 00000080 43 4D 75 6C 20	CMulValue       BYTE        "CMul value is: ",0
+	   76 61 6C 75 65
+	   20 69 73 3A 20
+	   00
+ 00000090 54 68 65 20 48	HRValues        BYTE        "The HR array values are: ",10,0
+	   52 20 61 72 72
+	   61 79 20 76 61
+	   6C 75 65 73 20
+	   61 72 65 3A 20
+	   0A 00
+ 000000AB 54 68 65 20 48	HRFValues       BYTE        "The HRF array values are: ",10,0
+	   52 46 20 61 72
+	   72 61 79 20 76
+	   61 6C 75 65 73
+	   20 61 72 65 3A
+	   20 0A 00
+ 000000C7 0A 00			EndLine         BYTE        10,0
+ 000000C9 5D 00			ClosedBracket   BYTE        "]",0
+ 000000CB 5B 00			OpenBracket     BYTE        "[",0
+ 000000CD 3A 00			SemiColon       BYTE        ":",0
+ 000000CF 2C 00			Comma           BYTE        ",",0
+ 000000D1 55 73 65 72 2C	Restart         BYTE        "User, press 0 to exit or any number to resume:",0
+	   20 70 72 65 73
+	   73 20 30 20 74
+	   6F 20 65 78 69
+	   74 20 6F 72 20
+	   61 6E 79 20 6E
+	   75 6D 62 65 72
+	   20 74 6F 20 72
+	   65 73 75 6D 65
+	   3A 00
+
+ 00000000			.CODE
+ 00000000			_start:
+ 00000000				 ;Create the stack frame for local variables
+ 00000000  55				push			ebp
+ 00000001  8B EC			mov				ebp,esp
+					;Local variables
+					;Age			          [ebp-4]
+					;RHR			          [ebp-8]
+					;CMul			          [ebp-12]
+					;(HRi – RHR)              [ebp-16]
+				    ;(HRi – RHR) × CMul       [ebp-20]
+					;(220 - age)              [ebp-24]
+					;(220-age)-RHR            [ebp -26]
+					;HRF(i)                   [ebp -30]
+ 00000003  83 EC 1E			sub				          esp,30           ;Since we only need space for only 3 variables here
+
+					;Getting input values from the user
+ 00000006			InputLoopStart:
+					INVOKE          OutputStr, ADDR strAge
+					;Storing the age value into stack
+					INVOKE          InputInt               ;ask age
+ 00000015  89 45 FC			mov             [ebp-4], eax           ;Storing age
+				    ;Asking for RHR value from user
+					INVOKE          OutputStr, ADDR strRHR
+					INVOKE          InputInt
+ 00000027  89 45 F8			mov             [ebp-8], eax           ;Storing the RHR
+				    ;Asking CMul value from user:
+				    INVOKE          OutputStr, ADDR strCMul
+					INVOKE          InputInt
+ 00000039  89 45 F4			mov             [ebp-12] ,eax              ;Storing the CMul value in the right variable
+				    ;Asking the user for the HRarray inputs
+ 0000003C  B9 00000000			mov             ecx,0
+ 00000041			HRArrayLoop:
+					INVOKE			OutputStr, ADDR strHR
+					INVOKE			OutputInt, ecx
+					INVOKE			OutputStr, ADDR SemiColon
+ 0000005B  8D 1D 00000000 R		lea             ebx, HR                ;Getting ebx to point to HR array
+ 00000061  6B C1 04			imul            eax, ecx, 4
+ 00000064  03 D8			add             ebx, eax
+					INVOKE          InputInt
+ 0000006B  89 03			mov             [ebx],eax
+ 0000006D  41				inc             ecx
+ 0000006E  83 F9 03			cmp             ecx,3
+ 00000071  7C CE			jl              HRArrayLoop
+				;Firstly accessing the array values for the array HR:
+ 00000073  B9 00000000		mov                 ecx, 0
+ 00000078			HRElements:
+ 00000078  8D 1D 00000000 R		lea				ebx,HR 					;Calculate the memory array offset using the formulae: (ecx * 4) + baseaddress
+ 0000007E  6B C1 04			imul			eax,ecx,4                  ;EAX = ECX*4
+ 00000081  03 D8			add				ebx,eax                    ;EBX = EBX + EAX, to move to the correct index in the array
+ 00000083  8B 13		    mov             edx, [ebx]
+
+				    ;Substracting:  HR[i]-RHR
+ 00000085  2B 55 F8			sub             edx,[ebp-8] 
+ 00000088  89 55 F0		    mov             [ebp-16],edx     ;[ebp-16] = edx = HR[i]-RHR
+ 0000008B  8B 55 F4			mov             edx, DWORD PTR [ebp-12]
+ 0000008E  0F AF 55 F0			imul            edx, DWORD PTR [ebp-16]
+ 00000092  89 55 EC		    mov             [ebp-20], edx    ;[ebp-20] = (HR[i]-RHR)*Cmul
+ 00000095  BA 000000DC			mov             edx, 220
+ 0000009A  2B 55 FC		    sub             edx, [ebp-4]
+ 0000009D  89 55 E8			mov            [ebp-24], edx   ;[ebp-24] = (220 - age)
+ 000000A0  8B 55 E8		    mov            edx, [ebp-24]
+ 000000A3  2B 55 F8			sub            edx, [ebp-8]    ; (220 - age) - RHR
+ 000000A6  89 55 E6			mov            [ebp -26], edx  ; [ebp-26] = (220 - age)-RHR
+ 000000A9  99				cdq
+ 000000AA  8B 45 EC			mov             eax, [ebp-20]
+ 000000AD  8B 5D E6			mov             ebx, [ebp -26]
+ 000000B0  F7 F3			div             ebx
+ 000000B2  89 45 E2		    mov             [ebp -30], eax  ;[ebp -30] has the HRF_i
+					;Storing the array values here:
+ 000000B5  8D 1D 0000000C R		lea				ebx,HRF					;Calculate the memory array offset using the formulae: (ecx * 4) + baseaddress
+ 000000BB  6B C1 04			imul			eax,ecx,4                  ;EAX = ECX*4
+ 000000BE  03 D8			add				ebx,eax                    ;EBX = EBX + EAX, to move to the correct index in the array
+ 000000C0  8B 55 E2		    mov             edx, [ebp -30]
+ 000000C3  89 13		    mov             [ebx], edx
+ 000000C5  41				inc             ecx
+ 000000C6  83 F9 03			cmp             ecx, 3
+ 000000C9  7C AD			jl              HRElements
+
+				;Displaying the values
+				;Printing the age
+				INVOKE              OutputStr, ADDR AgeValue
+				INVOKE              OutputInt, DWORD PTR [ebp-4]
+				INVOKE              OutputStr, ADDR EndLine
+				;Printing the RHR value here:
+				INVOKE              OutputStr, ADDR RHRValue
+				INVOKE              OutputInt, DWORD PTR [ebp-8]
+				INVOKE              OutputStr, ADDR EndLine
+				;Printing the CMul value here:
+				INVOKE              OutputStr, ADDR CMulValue
+				INVOKE              OutputInt, DWORD PTR [ebp-12]
+				INVOKE              OutputStr, ADDR EndLine
+				;Printing the HR array values here:
+				INVOKE              OutputStr, ADDR HRValues
+				INVOKE              OutputStr, ADDR OpenBracket
+ 00000133  B9 00000000		mov                 ecx, 0
+ 00000138			DisplayHRArrayLoop:
+ 00000138  8D 1D 00000000 R		lea				ebx,HR 					   ;Calculate the memory array offset using the formulae: (ecx * 4) + baseaddress
+ 0000013E  6B C1 04			imul			eax,ecx,4                  ;EAX = ECX*4
+ 00000141  03 D8			add				ebx,eax                    ;EBX = EBX + EAX, to move to the correct index in the array
+					INVOKE			OutputInt,[ebx]			   ;Output the array item at the index
+ 0000014A  83 F9 02			cmp				ecx,2                      ;Comparing the values
+ 0000014D  74 0A			je				AddComma
+					INVOKE			OutputStr, ADDR Comma
+ 00000159			AddComma:
+ 00000159  41				inc				ecx
+ 0000015A  83 F9 03			cmp 		   	ecx,3 
+ 0000015D  7C D9			jl				DisplayHRArrayLoop
+					INVOKE			OutputStr, ADDR ClosedBracket
+				    INVOKE          OutputStr, ADDR EndLine
+
+				;Printing the HRF array values here_:
+				INVOKE              OutputStr, ADDR HRFValues
+				INVOKE              OutputStr, ADDR OpenBracket
+ 00000187  B9 00000000		mov                 ecx, 0
+ 0000018C			DisplayHRFArray:
+ 0000018C  8D 1D 0000000C R		lea				ebx,HRF 				   ;Calculate the memory array offset using the formulae: (ecx * 4) + baseaddress
+ 00000192  6B C1 04			imul			eax,ecx,4                  ;EAX = ECX*4
+ 00000195  03 D8			add				ebx,eax                    ;EBX = EBX + EAX, to move to the correct index in the array
+					INVOKE			OutputInt,[ebx]			   ;Output the array item at the index
+ 0000019E  83 F9 02			cmp				ecx,2                      ;Comparing the values
+ 000001A1  74 0A			je				InsertComma
+					INVOKE			OutputStr, ADDR Comma
+ 000001AD			InsertComma:
+ 000001AD  41				inc				ecx
+ 000001AE  83 F9 03			cmp 		   	ecx,3 
+ 000001B1  7C D9			jl				DisplayHRFArray
+					INVOKE			OutputStr, ADDR ClosedBracket
+				    INVOKE          OutputStr, ADDR EndLine
+				    INVOKE          OutputStr, ADDR Restart
+					INVOKE          InputInt
+ 000001D6  83 F8 00			cmp             eax, 0
+ 000001D9  74 05			je              ExitProgram     
+ 000001DB  E9 FFFFFE20		    jmp             _start
+ 000001E0			ExitProgram:
+				    ;Destroy stack frame
+ 000001E0  8B E5			mov				esp,ebp
+ 000001E2  5D				pop				ebp
+				    
+
+					INVOKE ExitProcess, 0
+ 000001EA			Public _start
+				END
+Microsoft (R) Macro Assembler Version 6.11		    08/15/24 16:50:40
+src\221005009_P04.asm					     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000100 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000001EA DWord	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+$$$$$$00001  . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000001EA Private
+  InputLoopStart . . . . . . . .	L Near	 00000006 _TEXT	
+  HRArrayLoop  . . . . . . . . .	L Near	 00000041 _TEXT	
+  HRElements . . . . . . . . . .	L Near	 00000078 _TEXT	
+  DisplayHRArrayLoop . . . . . .	L Near	 00000138 _TEXT	
+  AddComma . . . . . . . . . . .	L Near	 00000159 _TEXT	
+  DisplayHRFArray  . . . . . . .	L Near	 0000018C _TEXT	
+  InsertComma  . . . . . . . . .	L Near	 000001AD _TEXT	
+  ExitProgram  . . . . . . . . .	L Near	 000001E0 _TEXT	
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputStr . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat8 . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputInt  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputStr  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+AddComma . . . . . . . . . . . .	L Near	 00000159 _TEXT	
+AgeValue . . . . . . . . . . . .	Byte	 00000062 _DATA	
+CMulValue  . . . . . . . . . . .	Byte	 00000080 _DATA	
+ClosedBracket  . . . . . . . . .	Byte	 000000C9 _DATA	
+Comma  . . . . . . . . . . . . .	Byte	 000000CF _DATA	
+DisplayHRArrayLoop . . . . . . .	L Near	 00000138 _TEXT	
+DisplayHRFArray  . . . . . . . .	L Near	 0000018C _TEXT	
+EndLine  . . . . . . . . . . . .	Byte	 000000C7 _DATA	
+ExitProgram  . . . . . . . . . .	L Near	 000001E0 _TEXT	
+HRArrayLoop  . . . . . . . . . .	L Near	 00000041 _TEXT	
+HRElements . . . . . . . . . . .	L Near	 00000078 _TEXT	
+HRFValues  . . . . . . . . . . .	Byte	 000000AB _DATA	
+HRF  . . . . . . . . . . . . . .	DWord	 0000000C _DATA	
+HRValues . . . . . . . . . . . .	Byte	 00000090 _DATA	
+HR . . . . . . . . . . . . . . .	DWord	 00000000 _DATA	
+IO_INC . . . . . . . . . . . . .	Text   	 1
+InputLoopStart . . . . . . . . .	L Near	 00000006 _TEXT	
+InsertComma  . . . . . . . . . .	L Near	 000001AD _TEXT	
+OpenBracket  . . . . . . . . . .	Byte	 000000CB _DATA	
+RHRValue . . . . . . . . . . . .	Byte	 00000071 _DATA	
+Restart  . . . . . . . . . . . .	Byte	 000000D1 _DATA	
+SemiColon  . . . . . . . . . . .	Byte	 000000CD _DATA	
+_start . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public
+strAge . . . . . . . . . . . . .	Byte	 00000018 _DATA	
+strCMul  . . . . . . . . . . . .	Byte	 00000036 _DATA	
+strHR  . . . . . . . . . . . . .	Byte	 00000049 _DATA	
+strRHR . . . . . . . . . . . . .	Byte	 00000024 _DATA	
+
+	   0 Warnings
+	   0 Errors

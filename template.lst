@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 6.11		    08/15/24 14:50:59
+Microsoft (R) Macro Assembler Version 6.11		    08/22/24 15:33:28
 src\template.asm					     Page 1 - 1
 
 
@@ -29,7 +29,7 @@ src\template.asm					     Page 1 - 1
 					INVOKE ExitProcess, 0
  00000007			Public _start
 				END
-Microsoft (R) Macro Assembler Version 6.11		    08/15/24 14:50:59
+Microsoft (R) Macro Assembler Version 6.11		    08/22/24 15:33:28
 src\template.asm					     Symbols 2 - 1
 
 
