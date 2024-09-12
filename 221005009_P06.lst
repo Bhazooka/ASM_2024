@@ -1,0 +1,179 @@
+Microsoft (R) Macro Assembler Version 6.11		    09/12/24 16:35:43
+src\221005009_P06.asm					     Page 1 - 1
+
+
+				;   Author:     B Bukanga
+				;   Template document
+				.386
+				.MODEL FLAT ; Flat memory model
+				.STACK 4096 ; 4096 bytes
+				include io.inc
+			      C ;
+			      C ; Simple I/O Routines - Version 2
+			      C ;
+			      C 
+			      C IFNDEF IO_INC
+ = 1			      C IO_INC equ <1>
+			      C 
+			      C OutputStr PROTO NEAR32 STDCALL :DWORD
+			      C OutputInt PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat8 PROTO NEAR32 STDCALL :QWORD
+			      C InputInt PROTO NEAR32 STDCALL
+			      C InputStr PROTO NEAR32 STDCALL :DWORD, :DWORD
+			      C 
+			      C ELSE
+			      C ENDIF
+			      C 
+
+				ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
+
+ 00000000			.DATA
+ 00000000 53 74 65 70 20	    strStepCountArr db 'Step Count Array:', 0
+	   43 6F 75 6E 74
+	   20 41 72 72 61
+	   79 3A 00
+ 00000012 53 74 65 70 20	    strStepCountSum db 'Step Count Sum:', 0
+	   43 6F 75 6E 74
+	   20 53 75 6D 3A
+	   00
+ 00000022 53 74 65 70 20	    strStepCountAve db 'Step Count Average:', 0
+	   43 6F 75 6E 74
+	   20 41 76 65 72
+	   61 67 65 3A 00
+ 00000036 52 65 73 75 6C	    strResult db 'Result: ', 0 
+	   74 3A 20 00
+ 0000003F 0D 0A 00		    newline db 13, 10, 0
+
+ 00000042 00000000		    stepCountSum dd 0
+ 00000046 00000000		    stepCountAverage dd 0
+ 0000004A 00000007		    numDays dd 7
+
+ 0000004E 0000000A		    stepCountArray dd 10, 20, 30, 40, 50, 60, 70 ; Test values
+	   00000014
+	   0000001E
+	   00000028
+	   00000032
+	   0000003C
+	   00000046
+				; point of this assembly program
+ 00000000			.CODE
+ 00000000			_start:
+ 00000000			    ; Display the values used
+				    INVOKE OutputStr, addr strStepCountArr
+ 0000000A  8D 35 0000004E R	    lea esi, [stepCountArray]    ; Load address of the step count array
+ 00000010  B9 00000007		    mov ecx, 7                  ; Number of elements in the array
+ 00000015			ArrayOutput:
+ 00000015  8B 06		    mov eax, [esi]              ; Get the next step count
+				    INVOKE OutputInt, eax       ; Output the integer value
+				    INVOKE OutputStr, addr newline ; Newline after each value
+ 00000027  83 C6 04		    add esi, 4                  ; Move to the next element
+ 0000002A  E2 E9		    loop ArrayOutput          ; Repeat for all elements
+
+				    ; Initialize registers
+ 0000002C  B9 00000000		    mov ecx, 0                   ; Index counter for recursion
+ 00000031  8D 35 0000004E R	    lea esi, [stepCountArray]    ; Load address of the step count array
+ 00000037  C7 05 00000042 R	    mov [stepCountSum], 0        ; Initialize stepCountSum to 0
+	   00000000
+
+				    ; Call recursive function to calculate sum
+ 00000041  E8 0000003D		    call RecursiveFunction
+				    ; calculate average
+ 00000046  A1 00000042 R	    mov eax, [stepCountSum]      ; Load stepCountSum into eax
+ 0000004B  8B 1D 0000004A R	    mov ebx, [numDays]           ; Load number of days into ebx
+ 00000051  99			    cdq                          ; Convert double to quad for division
+ 00000052  F7 F3		    div ebx                      ; Divide eax by ebx
+ 00000054  A3 00000046 R	    mov [stepCountAverage], eax   ; Store result in stepCountAverage
+
+				    ; Display Step Count Sum
+				    INVOKE OutputStr, addr strStepCountSum
+ 00000063  A1 00000042 R	    mov eax, [stepCountSum]
+				    INVOKE OutputInt, eax
+
+				    ; Display Step Count Average
+				    INVOKE OutputStr, addr strStepCountAve
+ 00000078  A1 00000046 R	    mov eax, [stepCountAverage]
+				    INVOKE OutputInt, eax
+
+				; Recursive function calculates step count sum
+ 00000083			RecursiveFunction:
+				    ; if index >= 7
+ 00000083  83 F9 07		    cmp ecx, 7
+ 00000086  7D 0F		    jge _BaseCase
+				    ; Calculate address of current element
+ 00000088  8B 04 8E		    mov eax, [esi + ecx*4]   ; Get step count at index ecx
+ 0000008B  01 05 00000042 R	    add [stepCountSum], eax  
+				    ; Recursive call
+ 00000091  41			    inc ecx                  ; Increment index
+ 00000092  E8 FFFFFFEC		    call RecursiveFunction  ; Recursive call
+
+ 00000097			_BaseCase:
+ 00000097  C3			    ret                      ; Return from function
+
+				    INVOKE ExitProcess, 0
+
+ 0000009F			Public _start
+				END
+Microsoft (R) Macro Assembler Version 6.11		    09/12/24 16:35:43
+src\221005009_P06.asm					     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 0000006A DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 0000009F DWord	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+$$$$$$00001  . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000009F Private
+  ArrayOutput  . . . . . . . . .	L Near	 00000015 _TEXT	
+  RecursiveFunction  . . . . . .	L Near	 00000083 _TEXT	
+  _BaseCase  . . . . . . . . . .	L Near	 00000097 _TEXT	
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputStr . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat8 . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputInt  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputStr  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+ArrayOutput  . . . . . . . . . .	L Near	 00000015 _TEXT	
+IO_INC . . . . . . . . . . . . .	Text   	 1
+RecursiveFunction  . . . . . . .	L Near	 00000083 _TEXT	
+_BaseCase  . . . . . . . . . . .	L Near	 00000097 _TEXT	
+_start . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public
+newline  . . . . . . . . . . . .	Byte	 0000003F _DATA	
+numDays  . . . . . . . . . . . .	DWord	 0000004A _DATA	
+stepCountArray . . . . . . . . .	DWord	 0000004E _DATA	
+stepCountAverage . . . . . . . .	DWord	 00000046 _DATA	
+stepCountSum . . . . . . . . . .	DWord	 00000042 _DATA	
+strResult  . . . . . . . . . . .	Byte	 00000036 _DATA	
+strStepCountArr  . . . . . . . .	Byte	 00000000 _DATA	
+strStepCountAve  . . . . . . . .	Byte	 00000022 _DATA	
+strStepCountSum  . . . . . . . .	Byte	 00000012 _DATA	
+
+	   0 Warnings
+	   0 Errors
