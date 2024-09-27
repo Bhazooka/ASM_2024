@@ -1,341 +1,386 @@
-;	Author: B Bukanga
-;	Template document
-.386
-.MODEL FLAT ; Flat memory model
-.STACK 4096 ; 4096 bytes
-INCLUDE io.inc
+; retool(int*array, int size)
+;int*array    [ebp+8]
+;int size     [ebp+12]
+retool   PROC NEAR32
+;Creating the stack frame here:
+push         ebp
+mov          ebp,esp
+;Space for local variables here:
 
-ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
+;Backing up registers here:
+push        eax
+push        ebx
+push        edx
+push        ecx
+pushfd
 
-; The data section stores all global variables
-.DATA
-	;global variables
-	LevelArray		DWORD			 5 DUP (?)
-	DurationArray   DWORD            5 DUP (?)
-	ScoreArray      DWORD            5 DUP (?)
+; =====================================Function code right here: =====================================
+;Printing the user prompts
+lea                 edx, Prompt2
+push                edx
+call                OutputStr
+lea                 edx, OpenBracket
+push                edx
+call                OutputStr
 
-	;user prompts
-	ArrayOutput     BYTE            "array is		: ",10,0
-	LevelArrayP     BYTE            "Level Array    : ",0
-	arrDuration  	BYTE            "Duration Array : ",0
-	arrScore     	BYTE            "Score Array    : ",0
-    agePrompt       BYTE            "Enter age here (in years): ",0
-	HRFPrompt       BYTE            "Enter the HRF value here: ",0
-	;Array Display
-	ageDisplay      BYTE            "The age is        : ",0
-	HRFDisplay      BYTE            "The HRF value is  : ",0
-	;Display format
-	SemiColon		BYTE			":",0
-	NewLine			BYTE			10,0
-	OpenBracket	    BYTE			"[",0
-	CloseBracket    BYTE			"]",0
-	Comma    		BYTE			",",0
-	ContinueCode    BYTE            "User, press 0 to exit or any number to resume:",0
-	Separate        BYTE            "*",10,0
+mov         ecx,0       ;Staring the counter for the array here
+FirstLoop:
+cmp        ecx,DWORD PTR [ebp+12]
+jge        LoopEnd_
+;Accessing array elements here:
+imul				eax,ecx,4
+mov					ebx,DWORD PTR [ebp+8]
+add					ebx,eax 			;The memory address of array[n]
+mov					edx,[ebx]
+;After getting the value of the array moved into edx, we multiply it but 4
+imul                ebx, edx,4
+;Printing the array values divided by 4:
+push                ebx
+call                OutputInt
+inc                 ecx
+;Comparing the counter before printing the array here:
+cmp                 ecx, DWORD PTR[ebp+12]
+jge                 LoopEnd_
+lea                 ebx, strComma
+push                ebx
+call                OutputStr
+jmp                 FirstLoop
+;Loop for the array elements is done:
+LoopEnd_:
+lea                 edx, CloedBracket
+push                edx
+call                OutputStr
+lea                ebx, strNL
+push               ebx
+call               OutputStr
+; ===================================== ===================================== =============================
+;Restoring registers here:
+popfd
+pop        ecx
+pop        edx
+pop        ebx
+pop        eax
 
-.CODE
-   ;Input function 
-   InputFunc PROC NEAR32
-	;Creating the stack frame
-	push				ebp
-	mov					ebp,esp
-	;Create space for local variables
-	
-	;Backup registers
-	;Do not backup eax if its a value returning function 
-	push				eax					
-	push				ebx
-	push				ecx
-	push				edx
-	pushfd
-
-	mov					ecx,0				;int n=0
-InputStart:
-	cmp					ecx,[ebp+12]
-	jge					InputEnd			;n<10
-
-	lea					ebx,HRFPrompt
-	push				ebx 
-	call				OutputStr
-	push				ecx 				;INVOKE OutputInt,ecx 
-	call				OutputInt
-	lea					ebx,SemiColon
-	push				ebx 
-	call				OutputStr
-	
-	;Calculate address of the array[n]
-	imul				eax,ecx,4
-	mov					ebx,DWORD PTR [ebp+8]
-	add					ebx,eax 			;Memory address of array[n]
-	call				InputInt
-	mov					[ebx],eax			;cin >> array[n]
-	
-	inc					ecx					;n++ 
-	jmp					InputStart
-InputEnd:
-	
-	;Restore registers to original value
-	popfd
-	pop					edx
-	pop					ecx
-	pop					ebx
-	pop					eax					;Do not restore eax, if its a value returning function.
-	
-	;Destroying stack frame
-	mov					esp,ebp
-	pop					ebp
-
-	;ret uses an operand indicating the number of PARAMETERS
-	ret					8
-   InputFunc ENDP
-
-   ;_Display function 
-   DisplayFunc PROC NEAR32
-	;Creating the stack frame
-	push				ebp
-	mov					ebp,esp
-	;Create space for local variables
-	
-	;Backup our existing registers
-	push				eax					;Do not backup eax if this is a value returning function 
-	push				ebx
-	push				ecx
-	push				edx
-	pushfd
-
-	lea					ebx,OpenBracket
-	push				ebx 
-	call				OutputStr
-
-	mov					ecx,0				;int n=0
-OuputStart:
-	cmp					ecx,[ebp+12]
-	jge					OuputEnd			;n<10
-	
-	;Calculate the address of the array[n]
-	imul				eax,ecx,4
-	mov					ebx,DWORD PTR [ebp+8]
-	add					ebx,eax 			;The memory address of array[n]
-	mov					eax,[ebx]
-	push				eax 
-	call				OutputInt
-	mov					eax,[ebp+12]
-	dec					eax
-	cmp					ecx,eax 
-	jge					CompleteFunc
-	lea					ebx,Comma
-	push				ebx 
-	call				OutputStr
-CompleteFunc:
-	inc					ecx
-	jmp					OuputStart
-OuputEnd:
-    lea					ebx,CloseBracket
-	push				ebx 
-	call				OutputStr
-	;Output a new line character
-	lea					ebx,NewLine
-	push				ebx 
-	call				OutputStr
-	
-	;Restore the registers to their original value
-	popfd
-	pop					edx
-	pop					ecx
-	pop					ebx
-	pop					eax					;Do not restore eax, if this is a value returning function.
-	
-	;Destroying the stack frame
-	mov					esp,ebp
-	pop					ebp
-	;Return instruction
-	;ret uses an operand indicating the number of PARAMETERS
-	ret					8
-DisplayFunc ENDP	
-
-   ;HealthScore function
-   ;inthealthScore(int age,intlevel,intduration,HRFPrompt)
-HealthScoreFunc PROC NEAR32
-	;Creating the stack frame
-	push				ebp
-	mov					ebp,esp
-    sub                 esp,24
-
-	;Backup our existing registers
-	push				ebx
-	push				ecx
-	push				edx
-	pushfd
-	;This is the function code 
-     
-    ;Firstly accessing the elements of level and duration array...
-MultFunc:
-	mov             edx, [ebp+12]
-	mov             eax, [ebp+16]
-
-	;Multiplying the entries here:
-	imul            edx,eax
-    mov             [ebp-4], edx
-
-    ;Moving HRF in one of the registers for multiplication purposes:
-	mov             ebx,DWORD PTR[ebp+20]
-    imul            edx, ebx
-	mov             [ebp-8]  ,edx
-
-    ;dealing with the denominator here
-     mov           eax, [ebp+8]
-	 mov           ebx, 10
-	 cdq
-	 div           ebx    
-	 mov           [ebp-12],eax    ;storinng age/10 here
-	 add            eax, 5
-	
-	mov             [ebp-16],eax
-	
-	;Dividing to get the HealthScore value here:
-	mov             eax, [ebp-8]
-	mov				edx,0
-	mov             ebx, [ebp-16]
-	div             ebx
-
-;Restore the registers to their original value
-	popfd
-	pop					edx
-	pop					ecx
-	pop					ebx
-	
-	;Destroying the stack frame
-	mov					esp,ebp
-	pop					ebp
-	;Return instruction
-	;ret uses an operand indicating the number of PARAMETERS
-	ret					8
-HealthScoreFunc ENDP	
-
-   
-_start:
-	;Main is here______________________________________________
-    ;Create the stack frame for local variables
-	push			          ebp
-	mov			              ebp,esp
-    sub                       esp, 20
-    
-	;Prompting the user here for the age and the hrf value:
-	INVOKE                    OutputStr, ADDR agePrompt
-	INVOKE                    InputInt
-	mov                       [ebp-4],eax
-	INVOKE                    OutputStr, ADDR HRFPrompt
-    INVOKE                    InputInt
-	mov                       [ebp-8],eax
-
-RestartFunction:
-	; input(&userArray,length);
-	; Calling the input function for the level array 
-	INVOKE              OutputStr, ADDR Separate
-	INVOKE              OutputStr, ADDR LevelArrayP
-	INVOKE              OutputStr, ADDR NewLine
-	lea					ebx,LevelArray
-	mov					eax,5 
-	push				eax
-	push				ebx 
-	call				InputFunc
-
-	; input(&userArray,length);
-	; Calling the input function for the Duration array 
-	INVOKE              OutputStr, ADDR Separate
-	INVOKE              OutputStr, ADDR arrDuration
-	INVOKE              OutputStr, ADDR NewLine
-	lea					ebx,DurationArray
-	mov					eax,5 
-	push				eax
-	push				ebx 
-	call				InputFunc
-	
-    ;Displaying the age and the HRF using the normal integer output here:
-	INVOKE              OutputStr, ADDR Separate
-    INVOKE              OutputStr, ADDR ageDisplay
-    INVOKE              OutputInt, DWORD PTR [ebp-4]
-    INVOKE              OutputStr, ADDR NewLine
-    INVOKE              OutputStr, ADDR HRFDisplay
-	INVOKE              OutputInt, DWORD PTR [ebp-8]
-    INVOKE              OutputStr, ADDR NewLine
-
-	; display(&userArray,length);
-	; Displaying the Level Array
-	INVOKE              OutputStr, ADDR LevelArrayP
-	lea					ebx,LevelArray
-	mov					eax,5 
-	push				eax
-	push				ebx 
-	call				DisplayFunc
-
-	; display(&userArray,length);
-	; Displaying the Duration Array
-	INVOKE              OutputStr, ADDR arrDuration
-	lea					ebx,DurationArray
-	mov					eax,5 
-	push				eax
-	push				ebx 
-	call				DisplayFunc
+;Destroying the stack frame here:
+mov       esp,ebp
+pop       ebp
+;Since we have two paramters we do the following here:
+ret       8
+retool    ENDP
 
 
-;Placing the values inside of healthscore function
- ;Firstly accessing the elements of level and duration array...
-    mov             ecx, 0
-IndexThroughArray:
-    cmp             ecx,5
-	je              DisplayArrValues
-	lea				ebx,LevelArray 			   ;Making ebx to point to the HR array here
-	imul			eax,ecx,4                  ;EAX = ECX*4
-	add				ebx,eax                    ;EBX = EBX + EAX, to move to the correct index in the array   
-    mov             edx,[ebx]
-    mov             [ebp-12], edx
 
-    lea				ebx,DurationArray 		   ;Making ebx to point to the HR array here
-	imul			eax,ecx,4                  ;EAX = ECX*4
-	add				ebx,eax                    ;EBX = EBX + EAX, to move to the correct index in the array   
-	mov             edx,[ebx]
-    mov             [ebp-16], edx
-   
-	; display(&userArray,length);
-	; Displaying the Duration Array
-	mov                 [ebp-20], ecx
-	mov					ecx,[ebp-4]  
-	mov					ebx,[ebp-12]           ;Moving the level array value here
-	mov                 edx,[ebp-16]           ;Moving the Duration array value here
-	mov					eax,[ebp-8]
-	push				eax
-	push				ebx 
-	push                edx
-	push                ecx
-	call				HealthScoreFunc
-	mov                 edx, eax
-	mov                 ecx, [ebp-20]
-	;Storing the values from healthScore function to the score array
-    lea				ebx,ScoreArray 			   ;Making ebx to point to the HR array here
-	imul			eax,ecx,4                  ;EAX = ECX*4
-	add				ebx,eax                    ;EBX = EBX + EAX, to move to the correct index in the array   
-    mov             [ebx], edx
-	inc             ecx
-	jmp                  IndexThroughArray
-	DisplayArrValues:
-   
-    ;; display(&userArray,length);
-	; Displaying the Score Array
-	INVOKE              OutputStr, ADDR arrDuration
-	lea					ebx,ScoreArray
-	mov					eax,5 
-	push				eax
-	push				ebx 
-	call				DisplayFunc
-    INVOKE              OutputStr, ADDR Separate  
-	;Handling the events when the user needs to exit the code here:
-	INVOKE              OutputStr, ADDR ContinueCode
-	INVOKE              InputInt
-	cmp                 eax, 0
-    je                  EndProgram
-    jmp                 _start
-EndProgram:
-	INVOKE ExitProcess, 0
-Public _start
-END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**********************************
+************ST2 2023*********
+**********************************
+
+retool PROC NEAR32
+; Creating the stack frame here:
+push        ebp                    
+mov         ebp, esp              
+
+; Backing up registers here:
+push        eax                    
+push        ebx                    
+push        ecx                    
+push        edx                    
+pushfd                           
+
+; Parameters:
+; int* arrRef   -> [ebp+8] (address of array)
+; int size      -> [ebp+12] length (length of the array)
+
+mov         esi, [ebp + 8]        ; Load the array address (arrRef) into esi
+mov         ecx, [ebp + 12]       ; Load the array size (size) into ecx
+
+; Loop condition test
+cmp         ecx, 0                ; Compare the size with 0
+jle         retoolLoopEnd         ; If size <= 0, jump to retoolLoopEnd (no elements to process)
+
+retoolLoopStart:
+    ; Accessing array elements here:
+    mov         eax, [esi]        ; Load the current array element into EAX (from memory at [esi])
+    imul        eax, 4            ; IMPORTANT "poi" "dividing each element in the array by 0.25, is equivalent to multiplying each element by 4
+    mov         [esi], eax        ; Store the modified value back into the array at the current position
+
+    ; Loop increment
+    add         esi, 4            ; Move to the next array element (each int is 4 bytes)
+    dec         ecx               ; Decrement ecx (the length of array/size/counter)
+    cmp         ecx, 0
+    jg          retoolLoopStart    ; If ecx > 0, jump back to retoolLoopStart to process the next element
+
+retoolLoopEnd:
+    ; Loop is done when ecx reaches 0 (since it's the array length)
+
+; Restoring registers here:
+popfd                            
+pop         edx                   
+pop         ecx                   
+pop         ebx                   
+pop         eax                   
+
+; Destroying the stack frame here:
+mov         esp, ebp              
+pop         ebp                  
+
+; Since we have two parameters (arrRef and size), ret 8 bytes
+ret         8                     
+
+retool ENDP
+
+
+**********************************
+************ST2 2022*********
+**********************************
+
+calculate PROC NEAR32
+; Creating the stack frame here:
+push        ebp                    
+mov         ebp, esp    
+
+;Create space for local variables
+	sub					esp,4
+	;sum				[ebp-4]
+
+; Backing up registers here:                   
+push        ebx                    
+push        ecx                    
+push        edx                    
+pushfd                           
+
+; Parameters:
+; int size      -> [ebp+8] (length of the array)
+; int* array    -> [ebp+12] (address of array)
+
+mov         ecx, [ebp + 8]        ; Load the size into ECX
+mov         esi, [ebp + 12]       ; Load the array address into ESI
+mov        DWORD PTR [ebp - 4], 0          ; Initialize local variable sum to 0
+
+; Loop condition test
+cmp         ecx, 0                 ; Compare the size with 0
+jle         calculateEnd           ; If size <= 0, jump to calculateEnd
+
+calculateLoopStart:
+    ; Accessing array elements here:
+    mov         edx, [esi]        ; Load the current array element into EDX
+    imul        edx, 2            ; Multiply the current element by 2
+    add         [ebp - 4], edx     ; Add the result to the local variable sum
+
+    ; Loop increment
+    add         esi, 4            ; Move to the next array element (each int is 4 bytes)
+    dec         ecx               ; Decrement ECX (the size/counter)
+    cmp         ecx, 0
+    jg          calculateLoopStart ; If ECX > 0, jump back to calculateLoopStart
+
+calculateEnd:
+    ; Load the sum into EAX to return
+    mov         eax, [ebp - 4]     ; Move the local sum to EAX
+
+; Restoring registers here:
+popfd                            
+pop         edx                   
+pop         ecx                   
+pop         ebx                                   
+
+; Destroying the stack frame here:
+mov         esp, ebp              
+pop         ebp                  
+
+; Since we have two parameters (size and array), ret 8 bytes
+ret         8                     
+
+calculate ENDP
+
+
+**********************************
+************EXAM SSA 2020*********
+**********************************
+
+paws   PROC NEAR32
+; Creating the stack frame here:
+push        ebp                   
+mov         ebp, esp              
+
+; Backing up registers here:
+push        eax                   
+push        ebx                   
+push        ecx                   
+push        edx                   
+pushfd                           
+
+; Parameters:
+; int* arrRef   -> [ebp+8] (address of array)
+; int size      -> [ebp+12] length (length of the array)
+
+mov         esi, [ebp + 8]        ; Load the array address (arrRef) into esi
+mov         ecx, [ebp + 12]       ; Load the array size (size) into ecx
+mov         ebx, 5                ; Store the constant 5 (to subtract from each element) in ebx
+
+; Loop condition test
+cmp         ecx, 0                ; Compare the size with 0
+jle         pawsLoopEnd              ; If size <= 0, jump to pawsLoopEnd (no elements to process)
+
+pawsLoopStart:
+    ; Accessing array elements here:
+    mov         eax, [esi]        ; Load the current array element into EAX (from memory at [esi])
+    sub         eax, ebx          ; Subtract 5 from the current array element
+    mov         [esi], eax        ; Store the modified value back into the array at the current position
+
+    ; Loop increment
+    add         esi, 4            ; Move to the next array element (each int is 4 bytes)
+    dec         ecx               ; Decrement ecx (the size/counter of remaining elements)
+	cmp			ecx,0
+    jle         pawsLoopStart         ; If ecx != 0, jump back to pawsLoopStart to process the next element
+
+pawsLoopEnd:
+    ; Loop is done when ecx reaches 0 (since its the array length)
+
+; Restoring registers here:
+popfd                            
+pop         edx                   
+pop         ecx                  
+pop         ebx                   
+pop         eax                  
+
+; Destroying the stack frame here:
+mov         esp, ebp              
+pop         ebp                  
+
+; Since we have two parameters (arrRef and size), ret 8 bytes
+ret         8                     
+
+paws   ENDP
+
+
+**********************************
+************EXAM SSSA 2020*********
+**********************************
+
+tros PROC NEAR32
+; Creating the stack frame here:
+push        ebp                    
+mov         ebp, esp              
+
+; Backing up registers here:
+push        eax                    
+push        ebx                    
+push        ecx                    
+push        edx                    
+pushfd                           
+
+; Parameters:
+; int* arrRef   -> [ebp+8] (address of array)
+; int n         -> [ebp+12] (current index)
+; int size      -> [ebp+16] (length of the array)
+
+mov         esi, [ebp + 8]        ; Load the array address (arrRef) into ESI
+mov         ecx, [ebp + 16]       ; Load the array size into ECX
+mov         ebx, [ebp + 12]       ; Load the current index (n) into EBX
+
+; Base case: Check if n >= size
+cmp         ebx, ecx              ; Compare n with size
+jge         trosEnd                ; If n >= size, jump to trosEnd (base case)
+
+; Perform add: Accessing array elements here:
+mov         eax, [esi + ebx * 4]  ; Load the current array element into EAX (from memory at [esi + ebx * 4])
+add         eax, 7                 ; Add 7 to the current element
+mov         [esi + ebx * 4], eax   ; Store the modified value back into the array at the current position
+
+; Recursive call: Prepare parameters for the next call
+inc         ebx                    ; Increment the index (n)
+push        ecx                    ; Push size
+push        ebx                    ; Push the new index (n)
+push        esi                    ; Push the array address (arrRef)
+call        tros                   ; Call the recursive tros function
+
+; Exit code: Restore registers here
+trosEnd:
+popfd                            
+pop         edx                   
+pop         ecx                   
+pop         ebx                   
+pop         eax                   
+
+; Destroying the stack frame here:
+mov         esp, ebp              
+pop         ebp                  
+
+; Since we have three parameters (arrRef, n, size), ret 12 bytes
+ret         12                    
+
+tros ENDP
+
+
+**********************************
+************EXAM MAIN 2020*********
+**********************************
+
+ekam PROC NEAR32
+; Creating the stack frame here:
+push        ebp                    
+mov         ebp, esp              
+
+; Backing up registers here:
+push        eax                    
+push        ebx                    
+push        ecx                    
+push        edx                    
+pushfd                           
+
+; Parameters:
+; int* arrRef   -> [ebp+8] (address of array)
+; int n         -> [ebp+12] (current index)
+; int size      -> [ebp+16] (length of the array)
+
+mov         esi, [ebp + 8]        ; Load the array address (arrRef) into ESI
+mov         ecx, [ebp + 16]       ; Load the array size into ECX
+mov         ebx, [ebp + 12]       ; Load the current index (n) into EBX
+
+; Base case: Check if n >= size
+cmp         ebx, ecx              ; Compare n with size
+jge         ekamEnd                ; If n >= size, jump to ekamEnd (base case)
+
+; Perform multiply: Accessing array elements here:
+mov         eax, [esi + ebx * 4]  ; Load the current array element into EAX (from memory at [esi + ebx * 4])
+imul        eax, 2                 ; Multiply the current element by 2
+mov         [esi + ebx * 4], eax   ; Store the modified value back into the array at the current position
+
+; Recursive call: Prepare parameters for the next call
+inc         ebx                    ; Increment the index (n)
+push        ecx                    ; Push size
+push        ebx                    ; Push the new index (n)
+push        esi                    ; Push the array address (arrRef)
+call        ekam                   ; Call the recursive ekam function
+
+; Exit code: Restore registers here
+ekamEnd:
+popfd                            
+pop         edx                   
+pop         ecx                   
+pop         ebx                   
+pop         eax                   
+
+; Destroying the stack frame here:
+mov         esp, ebp              
+pop         ebp                  
+
+; Since we have three parameters (arrRef, n, size), ret 12 bytes
+ret         12                    
+
+ekam ENDP

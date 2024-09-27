@@ -1,0 +1,246 @@
+Microsoft (R) Macro Assembler Version 6.11		    09/19/24 16:53:54
+src\221005009_P05.asm					     Page 1 - 1
+
+
+				; Author: B Bukanga
+				; Template document
+				.386
+				.MODEL FLAT ; Flat memory model
+				.STACK 4096 ; Allocate 4096 bytes for the stack
+				INCLUDE io.inc ; Include input/output functions
+			      C ;
+			      C ; Simple I/O Routines - Version 2
+			      C ;
+			      C 
+			      C IFNDEF IO_INC
+ = 1			      C IO_INC equ <1>
+			      C 
+			      C OutputStr PROTO NEAR32 STDCALL :DWORD
+			      C OutputInt PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat8 PROTO NEAR32 STDCALL :QWORD
+			      C InputInt PROTO NEAR32 STDCALL
+			      C InputStr PROTO NEAR32 STDCALL :DWORD, :DWORD
+			      C 
+			      C ELSE
+			      C ENDIF
+			      C 
+
+				; Exit function prototype
+				ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
+
+ 00000000			.DATA
+ 00000000 45 6E 74 65 72		reqInput          BYTE "Enter string: ", 0 ; Prompt message for user input
+	   20 73 74 72 69
+	   6E 67 3A 20 00
+ 0000000F 52 65 76 65 72		displayOutput     BYTE "Reversed string: ", 0 ; Message to display reversed string
+	   73 65 64 20 73
+	   74 72 69 6E 67
+	   3A 20 00
+ 00000021 21 00				searchChar        BYTE "!", 0 ; Character to search for in the string
+ 00000023 23 00				replaceChar       BYTE "#", 0 ; Character to replace searchChar with
+ 00000025 0A 00				NL                BYTE 10, 0 ; Newline character
+ 00000027  00000032 [			strInput          BYTE 50 DUP(0) ; Reserve space for input string (50 bytes)
+	    00
+	   ]
+
+ 00000000			.CODE
+				; Procedure to replace occurrences of a character in a string
+ 00000000			replaceCharfunction PROC NEAR32
+				    ; Save the base pointer and general-purpose registers
+ 00000000  55			    PUSH ebp
+ 00000001  8B EC		    MOV ebp, esp
+ 00000003  50			    PUSH eax
+ 00000004  53			    PUSH ebx
+ 00000005  51			    PUSH ecx
+ 00000006  52			    PUSH edx
+ 00000007  56			    PUSH esi
+ 00000008  9C			    PUSHFD
+				    
+				    ; Load the address of the string into ESI
+ 00000009  8B 75 08		    MOV esi, [ebp+8]      ; Address of the string parameter
+
+				    ; Load search and replacement characters
+ 0000000C  A0 00000021 R	    MOV al, searchChar    ; Character to search for
+ 00000011  8A 1D 00000023 R	    MOV bl, replaceChar   ; Replacement character
+
+ 00000017			replaceLoop:
+ 00000017  8A 16		    MOV dl, BYTE PTR [esi] ; Load current character from the string
+ 00000019  80 FA 00		    CMP dl, 0             ; Check for null terminator
+ 0000001C  74 09		    JE doneReplace        ; If end of string, exit loop
+ 0000001E  38 C2		    CMP dl, al            ; Compare current character with searchChar
+ 00000020  75 02		    JNE skipReplace       ; If not equal, skip replacement
+ 00000022  88 1E		    MOV BYTE PTR [esi], bl ; Replace with replaceChar
+
+ 00000024			skipReplace:
+ 00000024  46			    INC esi               ; Move to next character
+ 00000025  EB F0		    JMP replaceLoop       ; Repeat the loop
+
+ 00000027			doneReplace:
+				    ; Restore the original registers and flags
+ 00000027  9D			    POPFD
+ 00000028  5E			    POP esi
+ 00000029  5A			    POP edx
+ 0000002A  59			    POP ecx
+ 0000002B  5B			    POP ebx
+ 0000002C  58			    POP eax
+				    ; Restore the stack frame
+ 0000002D  8B E5		    MOV esp, ebp
+ 0000002F  5D			    POP ebp
+
+ 00000030  C2 0004		    RET 4                ; Clean up stack and return (4 bytes - 1 parameter)
+ 00000033			replaceCharfunction ENDP
+
+				; Procedure to reverse a string in place
+ 00000033			functionToReverseString PROC NEAR32
+				    ; Create stack frame and save general-purpose registers
+ 00000033  55			    PUSH ebp
+ 00000034  8B EC		    MOV ebp, esp
+ 00000036  50			    PUSH eax
+ 00000037  53			    PUSH ebx
+ 00000038  51			    PUSH ecx
+ 00000039  52			    PUSH edx
+ 0000003A  56			    PUSH esi
+ 0000003B  57			    PUSH edi
+ 0000003C  9C			    PUSHFD
+				    
+				    ; Load address of the string into ESI
+ 0000003D  8B 75 08		    MOV esi, [ebp+8]
+				    ; Find the end of the string
+ 00000040  8B FE		    MOV edi, esi          ; Copy start address to EDI
+
+ 00000042			findEnd:
+ 00000042  80 3F 00		    CMP BYTE PTR [edi], 0 ; Compare current character with null terminator
+ 00000045  74 03		    JE startReverse      ; If end of string, start reversing
+ 00000047  47			    INC edi              ; Move to the next character
+ 00000048  EB F8		    JMP findEnd          ; Continue searching
+
+ 0000004A			startReverse:
+ 0000004A  4F			    DEC edi              ; Move back one position to point to the last character
+
+ 0000004B			reverseLoop:
+ 0000004B  3B F7		    CMP esi, edi         ; Compare pointers
+ 0000004D  7D 0C		    JGE doneReverse     ; If pointers have crossed, stop reversing
+				    ; Swap characters at ESI and EDI
+ 0000004F  8A 06		    MOV al, [esi]
+ 00000051  8A 1F		    MOV bl, [edi]
+ 00000053  88 1E		    MOV [esi], bl
+ 00000055  88 07		    MOV [edi], al
+				    ; Move pointers inward
+ 00000057  46			    INC esi
+ 00000058  4F			    DEC edi
+
+ 00000059  EB F0		    JMP reverseLoop      ; Repeat swapping
+
+ 0000005B			doneReverse:
+				    ; Restore the original registers and flags
+ 0000005B  9D			    POPFD
+ 0000005C  5F			    POP edi
+ 0000005D  5E			    POP esi
+ 0000005E  5A			    POP edx
+ 0000005F  59			    POP ecx
+ 00000060  5B			    POP ebx
+ 00000061  58			    POP eax
+				    ; Restore the stack frame
+ 00000062  8B E5		    MOV esp, ebp
+ 00000064  5D			    POP ebp
+ 00000065  C2 0004		    RET 4               ; Return and clean up stack (4 bytes - 1 parameter)
+ 00000068			functionToReverseString ENDP
+
+ 00000068			_start:
+ 00000068			    ; Create stack frame
+ 00000068  55			    PUSH ebp
+ 00000069  8B EC		    MOV ebp, esp
+
+				    ; Prompt user for input
+				    INVOKE OutputStr, ADDR reqInput
+ 00000075  6A 32		    PUSH 50
+ 00000077  8D 1D 00000027 R	    LEA ebx, strInput
+ 0000007D  53			    PUSH ebx
+ 0000007E  E8 00000000 E	    CALL InputStr
+
+				    ; Call replaceCharfunction to replace characters in the string
+ 00000083  8D 05 00000027 R	    LEA eax, strInput
+ 00000089  50			    PUSH eax
+ 0000008A  E8 FFFFFF71		    CALL replaceCharfunction
+
+				    ; Call functionToReverseString to reverse the string
+ 0000008F  8D 05 00000027 R	    LEA eax, strInput
+ 00000095  50			    PUSH eax
+ 00000096  E8 FFFFFF98		    CALL functionToReverseString
+
+				    ; Output reversed string
+				    INVOKE OutputStr, ADDR displayOutput
+				    INVOKE OutputStr, ADDR strInput
+				    INVOKE OutputStr, ADDR NL
+
+				    ; Restore stack frame and exit
+ 000000B9  8B E5		    MOV esp, ebp
+ 000000BB  5D			    POP ebp
+				    INVOKE ExitProcess, 0
+
+ 000000C3			Public _start
+				END
+Microsoft (R) Macro Assembler Version 6.11		    09/19/24 16:53:54
+src\221005009_P05.asm					     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000059 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000000C3 DWord	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+$$$$$$00003  . . . . . . . . . .	P Near	 00000068 _TEXT	Length= 0000005B Private
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputStr . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat8 . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputInt  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputStr  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+functionToReverseString  . . . .	P Near	 00000033 _TEXT	Length= 00000035 Public
+  findEnd  . . . . . . . . . . .	L Near	 00000042 _TEXT	
+  startReverse . . . . . . . . .	L Near	 0000004A _TEXT	
+  reverseLoop  . . . . . . . . .	L Near	 0000004B _TEXT	
+  doneReverse  . . . . . . . . .	L Near	 0000005B _TEXT	
+replaceCharfunction  . . . . . .	P Near	 00000000 _TEXT	Length= 00000033 Public
+  replaceLoop  . . . . . . . . .	L Near	 00000017 _TEXT	
+  skipReplace  . . . . . . . . .	L Near	 00000024 _TEXT	
+  doneReplace  . . . . . . . . .	L Near	 00000027 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+IO_INC . . . . . . . . . . . . .	Text   	 1
+NL . . . . . . . . . . . . . . .	Byte	 00000025 _DATA	
+_start . . . . . . . . . . . . .	L Near	 00000068 _TEXT	Public
+displayOutput  . . . . . . . . .	Byte	 0000000F _DATA	
+replaceChar  . . . . . . . . . .	Byte	 00000023 _DATA	
+reqInput . . . . . . . . . . . .	Byte	 00000000 _DATA	
+searchChar . . . . . . . . . . .	Byte	 00000021 _DATA	
+strInput . . . . . . . . . . . .	Byte	 00000027 _DATA	
+
+	   0 Warnings
+	   0 Errors
