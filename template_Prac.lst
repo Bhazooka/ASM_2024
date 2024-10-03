@@ -1,0 +1,200 @@
+Microsoft (R) Macro Assembler Version 6.11		    10/03/24 14:44:35
+src\template_Prac.asm					     Page 1 - 1
+
+
+				Please paraphrase gents:
+src\template_Prac.asm(1): error A2008: syntax error : paraphrase
+
+				;	Author:    Vutivi Shibambo, student number: 220038169
+
+
+
+				.386
+				.MODEL FLAT ; Flat memory model
+				.STACK 4096 ; 4096 bytes
+				include io.inc
+			      C ;
+			      C ; Simple I/O Routines - Version 2
+			      C ;
+			      C 
+			      C IFNDEF IO_INC
+ = 1			      C IO_INC equ <1>
+			      C 
+			      C OutputStr PROTO NEAR32 STDCALL :DWORD
+			      C OutputInt PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat8 PROTO NEAR32 STDCALL :QWORD
+			      C InputInt PROTO NEAR32 STDCALL
+			      C InputStr PROTO NEAR32 STDCALL :DWORD, :DWORD
+			      C 
+			      C ELSE
+			      C ENDIF
+			      C 
+
+				; Exit function
+				ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
+
+ 00000000			.DATA
+
+ 00000000 00000005		inputArray DWORD 5, 15, 9, 24, 0, 4, 54  ; Simulated 7 days rewards
+	   0000000F
+	   00000009
+	   00000018
+	   00000000
+	   00000004
+	   00000036
+ 0000001C 00000000		intResult DWORD 0                             ; To store integer average result
+ 00000020 00000000		floatResult REAL4 0.0                         ; To store floating-point average result
+ 00000024 00000007		arraySize DWORD 7                             ; Size of the array (7 elements)
+ 00000028 00000000		total DWORD 0                                 ; Variable to store sum
+ 0000002C 49 6E 74 65 67	msgIntAverage BYTE "Integer Average: ", 0
+	   65 72 20 41 76
+	   65 72 61 67 65
+	   3A 20 00
+ 0000003E 46 6C 6F 61 74	msgFloatAverage BYTE "Floating-point Average: ", 0
+	   69 6E 67 2D 70
+	   6F 69 6E 74 20
+	   41 76 65 72 61
+	   67 65 3A 20 00
+ 00000057 0A 00			newLine BYTE 10,0
+
+ 00000000			.CODE
+
+				; Function to calculate integer average
+ 00000000			calculateIntAverage PROC NEAR32
+ 00000000  33 C0		    XOR eax, eax                  ; Clear eax
+ 00000002  33 C9		    XOR ecx, ecx                  ; Clear ecx
+
+ 00000004  BB 00000000 R	    MOV ebx, OFFSET inputArray     ; Point ebx to the start of inputArray
+ 00000009  8B 15 00000024 R	    MOV edx, arraySize             ; Set edx to array size (7)
+				    
+				    ; Loop to sum up elements of inputArray
+ 0000000F			sumLoop:
+ 0000000F  03 04 8B		    ADD eax, [ebx + ecx*4]         ; Add the current element to eax
+ 00000012  41			    INC ecx                        ; Move to the next index
+ 00000013  3B CA		    CMP ecx, edx                   ; Check if we've processed all elements
+ 00000015  7C F8		    JL sumLoop                     ; If not, repeat
+
+ 00000017  A3 00000028 R	    MOV total, eax                 ; Store total sum in 'total'
+
+				    ; Calculate integer average (intResult = total / arraySize)
+ 0000001C  99			    CDQ                            ; Extend eax into edx:eax for division
+ 0000001D  A1 00000028 R	    MOV eax, total                 ; Load sum into eax
+ 00000022  8B 0D 00000024 R	    MOV ecx, arraySize             ; Load arraySize into ecx
+ 00000028  F7 F1		    DIV ecx                        ; Divide total by arraySize
+				    
+ 0000002A  A3 0000001C R	    MOV intResult, eax             ; Store the result in intResult
+ 0000002F  C3			    RET
+ 00000030			calculateIntAverage ENDP
+
+				; Function to calculate floating-point average
+ 00000030			calculateFloatAverage PROC
+				    ; Initialize FPU
+ 00000030  9B DB E3		    FINIT                               ; Initialize FPU to default control word
+
+ 00000033  33 C9		    XOR ecx, ecx                        ; Clear index for loop
+ 00000035  BB 00000000 R	    MOV ebx, OFFSET inputArray          ; Point to start of inputArray
+ 0000003A  8B 15 00000024 R	    MOV edx, arraySize                  ; Load arraySize
+				    
+ 00000040  D9 EE		    FLDZ                                ; Load 0.0 onto FPU stack for accumulation
+
+ 00000042			sumFloatLoop:
+ 00000042  DB 04 8B		    FILD DWORD PTR [ebx + ecx*4]        ; Load integer from inputArray and convert to float
+ 00000045  DE C1		    FADD                                ; Add it to the sum on the FPU stack
+ 00000047  41			    INC ecx                             ; Move to the next element
+ 00000048  3B CA		    CMP ecx, edx                        ; Check if all elements are processed
+ 0000004A  7C F6		    JL sumFloatLoop                     ; If not, repeat
+
+				    ; Calculate floating-point average
+ 0000004C  DB 05 00000024 R	    FILD DWORD PTR arraySize            ; Load arraySize as float onto the FPU stack
+ 00000052  DE F9		    FDIV                                ; Divide sum by arraySize
+
+				    ; Store the result in floatResult
+ 00000054  D9 1D 00000020 R	    FSTP floatResult                    ; Pop FPU stack and store in floatResult
+ 0000005A  C3			    RET
+ 0000005B			calculateFloatAverage ENDP
+
+ 0000005B			_start:
+ 0000005B				
+					; Call calculateIntAverage
+ 0000005B  E8 FFFFFFA0		    CALL calculateIntAverage
+
+					; Call calculateFloatAverage
+ 00000060  E8 FFFFFFCB			CALL calculateFloatAverage
+
+					; Print Integer Average
+					INVOKE OutputStr, ADDR msgIntAverage   
+					INVOKE OutputInt, intResult            
+
+					INVOKE OutputStr, ADDR newLine       
+
+					; Print Floating-point Average
+					INVOKE OutputStr, ADDR msgFloatAverage 
+					INVOKE OutputFloat, floatResult        
+
+					INVOKE OutputStr, ADDR newLine 
+
+					; We call the Operating System ExitProcess system call to close the process.
+					INVOKE ExitProcess, 0
+ 000000AA			Public _start
+				END
+Microsoft (R) Macro Assembler Version 6.11		    10/03/24 14:44:35
+src\template_Prac.asm					     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000059 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000000AA DWord	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+$$$$$$00003  . . . . . . . . . .	P Near	 0000005B _TEXT	Length= 0000004F Private
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputStr . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat8 . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputInt  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputStr  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+calculateFloatAverage  . . . . .	P Near	 00000030 _TEXT	Length= 0000002B Public
+  sumFloatLoop . . . . . . . . .	L Near	 00000042 _TEXT	
+calculateIntAverage  . . . . . .	P Near	 00000000 _TEXT	Length= 00000030 Public
+  sumLoop  . . . . . . . . . . .	L Near	 0000000F _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+IO_INC . . . . . . . . . . . . .	Text   	 1
+_start . . . . . . . . . . . . .	L Near	 0000005B _TEXT	Public
+arraySize  . . . . . . . . . . .	DWord	 00000024 _DATA	
+floatResult  . . . . . . . . . .	DWord	 00000020 _DATA	
+inputArray . . . . . . . . . . .	DWord	 00000000 _DATA	
+intResult  . . . . . . . . . . .	DWord	 0000001C _DATA	
+msgFloatAverage  . . . . . . . .	Byte	 0000003E _DATA	
+msgIntAverage  . . . . . . . . .	Byte	 0000002C _DATA	
+newLine  . . . . . . . . . . . .	Byte	 00000057 _DATA	
+total  . . . . . . . . . . . . .	DWord	 00000028 _DATA	
+
+	   0 Warnings
+	   1 Errors

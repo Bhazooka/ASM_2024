@@ -1,0 +1,216 @@
+Microsoft (R) Macro Assembler Version 6.11		    10/03/24 15:49:10
+src\221005009_P08.asm					     Page 1 - 1
+
+
+				; Author: Baraka Bukanga
+				; Fitness Rewards Calculation Template
+				.386
+				.MODEL FLAT ; Flat memory model
+				.STACK 4096 ; Allocate 4096 bytes for stack
+
+				INCLUDE io.inc
+			      C ;
+			      C ; Simple I/O Routines - Version 2
+			      C ;
+			      C 
+			      C IFNDEF IO_INC
+ = 1			      C IO_INC equ <1>
+			      C 
+			      C OutputStr PROTO NEAR32 STDCALL :DWORD
+			      C OutputInt PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat8 PROTO NEAR32 STDCALL :QWORD
+			      C InputInt PROTO NEAR32 STDCALL
+			      C InputStr PROTO NEAR32 STDCALL :DWORD, :DWORD
+			      C 
+			      C ELSE
+			      C ENDIF
+			      C 
+
+				; Prototype for exit function
+				ExitProcess PROTO NEAR32 stdcall, dwExitCode:DWORD
+
+ 00000000			.DATA
+				    ; test values
+ 00000000 00000005		    fitnessRewards  DWORD 5, 15, 9, 24, 0, 4, 54
+	   0000000F
+	   00000009
+	   00000018
+	   00000000
+	   00000004
+	   00000036
+ 0000001C 0A 00			    NL			    BYTE  10, 0
+ 0000001E 52 65 77 61 72	    strReward       BYTE "Rewards for Fitness Goals: ", 0
+	   64 73 20 66 6F
+	   72 20 46 69 74
+	   6E 65 73 73 20
+	   47 6F 61 6C 73
+	   3A 20 00
+ 0000003A 43 50 55 20 49	    strCPUAve       BYTE "CPU Integer Daily Avg: ", 0
+	   6E 74 65 67 65
+	   72 20 44 61 69
+	   6C 79 20 41 76
+	   67 3A 20 00
+ 00000052 46 50 55 20 46	    strFPUAve       BYTE "FPU Float Daily Avg: ", 0
+	   6C 6F 61 74 20
+	   44 61 69 6C 79
+	   20 41 76 67 3A
+	   20 00
+				    ; Display format
+ 00000068 3A 00				SemiColon		BYTE			":",0
+ 0000006A 5B 00				OpenBracket	    BYTE			"[",0
+ 0000006C 5D 00				CloseBracket    BYTE			"]",0
+ 0000006E 2C 00				Comma    		BYTE			",",0
+
+				    ; Variables to store the calculated results
+ 00000070 00000000		    averageInt DWORD 0
+ 00000074 00000000		    averageFloat DD 0.0
+ 00000078 00000007		    totalDays DWORD 7  ; num of days in fitness rewards array
+
+ 00000000			.CODE
+ 00000000			_start:
+ 00000000			    ; Display rewards string
+ 00000000  68 0000001E R	    push OFFSET strReward
+ 00000005  E8 00000000 E	    call OutputStr
+				    ; Display fitness reward
+ 0000000A  8D 35 00000000 R	    LEA ESI, fitnessRewards
+ 00000010  8B 0D 00000078 R	    MOV ECX, totalDays
+ 00000016			displayrewardloop_:
+ 00000016  FF 36		    push [ESI]
+ 00000018  E8 00000000 E	    call OutputInt
+ 0000001D  68 0000001C R	    push OFFSET NL
+ 00000022  E8 00000000 E	    call OutputStr
+ 00000027  83 C6 04		    ADD ESI, 4
+ 0000002A  E2 EA		    loop displayrewardloop_
+				    ; Output newline before averages
+ 0000002C  68 0000001C R	    push OFFSET NL
+ 00000031  E8 00000000 E	    call OutputStr
+				    ; call integer average function
+ 00000036  E8 00000039		    call calcAve
+				    ; Output integer average string
+ 0000003B  68 0000003A R	    push OFFSET strCPUAve
+ 00000040  E8 00000000 E	    call OutputStr
+				    ; Output integer average result
+ 00000045  FF 35 00000070 R	    push averageInt
+ 0000004B  E8 00000000 E	    call OutputInt
+				    ; Output new line
+ 00000050  68 0000001C R	    push OFFSET NL
+ 00000055  E8 00000000 E	    call OutputStr
+				    ; call the floating-point average function
+ 0000005A  E8 0000003C		    call calcFloatAve
+				    ; Output the floating-point average string
+ 0000005F  68 00000052 R	    push OFFSET strFPUAve
+ 00000064  E8 00000000 E	    call OutputStr
+				    ; Output the floating-point average result
+ 00000069  FF 35 00000074 R	    push averageFloat
+ 0000006F  E8 00000000 E	    call OutputFloat
+
+ 00000074 00000074		calcAve PROC ;calculate integer average
+ 00000074  B8 00000000		    mov EAX, 0           ; Clear EAX for sum calculation
+ 00000079  8B 0D 00000078 R	    mov ECX, totalDays   ; ECX used as loop counter
+ 0000007F  8D 35 00000000 R	    lea ESI, fitnessRewards  ; Load the address of the fitnessRewards array into ESI
+
+ 00000085			calcnumloop_:
+ 00000085  03 06		    add EAX, [ESI]       ; Add each element of the array to EAX
+ 00000087  83 C6 04		    add ESI, 4           ; Move to the next array element (DWORD size = 4 bytes)
+ 0000008A  E2 F9		    loop calcnumloop_
+
+				    ; Calculate the average by dividing the sum in EAX by totalDays (7)
+ 0000008C  8B 1D 00000078 R	    mov EBX, totalDays
+ 00000092  99			    cdq                  ; Sign-extend EAX into EDX:EAX for division
+ 00000093  F7 FB		    idiv EBX             ; Integer division: EAX = EAX / EBX, remainder in EDX
+ 00000095  A3 00000070 R	    MOV averageInt, EAX  ; Store the integer average in averageInt
+ 0000009A  C3			    RET
+ 0000009B			calcAve ENDP
+
+				;calc the floating-point average
+ 0000009B			calcFloatAve PROC
+ 0000009B  D9 EE		    FLDZ                 ; Load 0.0
+ 0000009D  8B 0D 00000078 R	    MOV ECX, totalDays   ; ECX used as the loop counter
+
+ 000000A3  8D 35 00000000 R	    LEA ESI, fitnessRewards  ; Load the address of the fitnessRewards array into ESI
+
+ 000000A9			calcfloatloop_:
+ 000000A9  DB 06		    FILD DWORD PTR [ESI]  ; Load integer value into FPU
+ 000000AB  DE C1		    FADD                 ; Add it to the current sum
+ 000000AD  83 C6 04		    ADD ESI, 4           ; Move to the next array element
+ 000000B0  E2 F7		    loop calcfloatloop_
+
+ 000000B2  DB 05 00000078 R	    FILD DWORD PTR totalDays ; Load totalDays into FPU
+ 000000B8  DE F9		    FDIV                     ; Perform floating-point division
+
+ 000000BA  D9 1D 00000074 R	    FSTP averageFloat        ; Store the result in averageFloat
+ 000000C0  C3			    RET
+ 000000C1			calcFloatAve ENDP
+ 000000C1
+				INVOKE ExitProcess, 0
+
+ 000000C8			PUBLIC _start  
+				END      
+Microsoft (R) Macro Assembler Version 6.11		    10/03/24 15:49:10
+src\221005009_P08.asm					     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 0000007C DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000000C8 DWord	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+$$$$$$00001  . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000074 Private
+  displayrewardloop_ . . . . . .	L Near	 00000016 _TEXT	
+$$$$$$00004  . . . . . . . . . .	P Near	 000000C1 _TEXT	Length= 00000007 Private
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputStr . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat8 . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputInt  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputStr  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+calcAve  . . . . . . . . . . . .	P Near	 00000074 _TEXT	Length= 00000027 Public
+  calcnumloop_ . . . . . . . . .	L Near	 00000085 _TEXT	
+calcFloatAve . . . . . . . . . .	P Near	 0000009B _TEXT	Length= 00000026 Public
+  calcfloatloop_ . . . . . . . .	L Near	 000000A9 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000000h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+CloseBracket . . . . . . . . . .	Byte	 0000006C _DATA	
+Comma  . . . . . . . . . . . . .	Byte	 0000006E _DATA	
+IO_INC . . . . . . . . . . . . .	Text   	 1
+NL . . . . . . . . . . . . . . .	Byte	 0000001C _DATA	
+OpenBracket  . . . . . . . . . .	Byte	 0000006A _DATA	
+SemiColon  . . . . . . . . . . .	Byte	 00000068 _DATA	
+_start . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public
+averageFloat . . . . . . . . . .	DWord	 00000074 _DATA	
+averageInt . . . . . . . . . . .	DWord	 00000070 _DATA	
+displayrewardloop_ . . . . . . .	L Near	 00000016 _TEXT	
+fitnessRewards . . . . . . . . .	DWord	 00000000 _DATA	
+strCPUAve  . . . . . . . . . . .	Byte	 0000003A _DATA	
+strFPUAve  . . . . . . . . . . .	Byte	 00000052 _DATA	
+strReward  . . . . . . . . . . .	Byte	 0000001E _DATA	
+totalDays  . . . . . . . . . . .	DWord	 00000078 _DATA	
+
+	   0 Warnings
+	   0 Errors
