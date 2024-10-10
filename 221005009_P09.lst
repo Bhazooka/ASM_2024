@@ -1,0 +1,120 @@
+Microsoft (R) Macro Assembler Version 6.11		    10/10/24 16:16:02
+src\221005009_P09.asm					     Page 1 - 1
+
+
+				.386
+				.MODEL FLAT, stdcall 
+				.STACK 4096
+				Include io.inc
+			      C ;
+			      C ; Simple I/O Routines - Version 2
+			      C ;
+			      C 
+			      C IFNDEF IO_INC
+ = 1			      C IO_INC equ <1>
+			      C 
+			      C OutputStr PROTO NEAR32 STDCALL :DWORD
+			      C OutputInt PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat8 PROTO NEAR32 STDCALL :QWORD
+			      C InputInt PROTO NEAR32 STDCALL
+			      C InputStr PROTO NEAR32 STDCALL :DWORD, :DWORD
+			      C 
+			      C ELSE
+			      C ENDIF
+			      C 
+ 00000000			.CODE
+
+ 00000000			LibMain proc instance:DWORD, reason:DWORD, unused:DWORD
+ 00000003  B8 00000001		    mov eax, 1
+				    ret
+ 0000000C			LibMain ENDP
+
+ 0000000C			computeResult  PROC NEAR32
+ 0000000C  55			    PUSH EBP
+ 0000000D  8B EC		    MOV EBP,ESP
+ 0000000F  83 EC 00		    SUB ESP,0
+
+ 00000012  53			    PUSH EBX
+ 00000013  51			    PUSH ECX
+ 00000014  52			    PUSH EDX
+ 00000015  9C			    PUSHFD
+
+ 00000016  8B 45 08		    mov eax, [ebp+8] 
+ 00000019  03 45 0C		    add eax, [ebp+12]
+
+				    ; Multiply by the multiplier
+ 0000001C  8B 5D 10		    mov ebx, [ebp+16]
+ 0000001F  0F AF C3		    imul eax, ebx
+
+				    ; Divide by the divisor
+ 00000022  8B 4D 14		    mov ecx, [ebp+20]          ; Load divisor into ECX
+ 00000025  33 D2		    xor edx, edx               ; Clear EDX before division
+ 00000027  F7 F1		    div ecx                    ; EAX = EAX / divisor (result in EAX, remainder in EDX)
+				    
+ 00000029  0F AF C0		    imul eax, eax              ; EAX = EAX * EAX
+
+ 0000002C  9D			    POPFD
+ 0000002D  5B			    POP EBX
+ 0000002E  59			    POP ECX
+ 0000002F  5A			    POP EDX
+
+				    ;removing stack
+ 00000030  8B E5		    MOV ESP,EBP
+ 00000032  5D			    POP EBP
+				    ;
+
+ 00000033  C3			    RET 
+ 00000034			computeResult ENDP
+
+				end LibMain
+Microsoft (R) Macro Assembler Version 6.11		    10/10/24 16:16:02
+src\221005009_P09.asm					     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000000 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000034 DWord	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+InputInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputStr . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+LibMain  . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000000C Public STDCALL
+  instance . . . . . . . . . . .	DWord	 bp + 00000008
+  reason . . . . . . . . . . . .	DWord	 bp + 0000000C
+  unused . . . . . . . . . . . .	DWord	 bp + 00000010
+OutputFloat8 . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputInt  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputStr  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+computeResult  . . . . . . . . .	P Near	 0000000C _TEXT	Length= 00000028 Public STDCALL
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+IO_INC . . . . . . . . . . . . .	Text   	 1
+
+	   0 Warnings
+	   0 Errors

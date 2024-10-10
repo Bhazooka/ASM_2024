@@ -1,0 +1,2 @@
+LIBRARY P09
+EXPORTS computeResult
