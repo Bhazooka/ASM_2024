@@ -1,0 +1,175 @@
+Microsoft (R) Macro Assembler Version 14.29.30154.0	    10/17/24 22:19:15
+PE1DLL.asm						     Page 1 - 1
+
+
+				; Author: B, Bukanga; 221005009
+				; PE1 DLL starter file
+				.386
+				.MODEL FLAT, stdcall
+				.STACK 4096
+				include io.inc
+			      C ;
+			      C ; Simple I/O Routines - Version 2
+			      C ;
+			      C 
+			      C IFNDEF IO_INC
+ = 1			      C IO_INC equ <1>
+			      C 
+			      C OutputStr PROTO NEAR32 STDCALL :DWORD
+			      C OutputInt PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat PROTO NEAR32 STDCALL :DWORD
+			      C OutputFloat8 PROTO NEAR32 STDCALL :QWORD
+			      C InputInt PROTO NEAR32 STDCALL
+			      C InputStr PROTO NEAR32 STDCALL :DWORD, :DWORD
+			      C 
+			      C ELSE
+			      C ENDIF
+			      C 
+
+ 00000000			.CODE
+
+				; Entry point function for the DLL
+ 00000000			DllEntryPoint proc hInst:DWORD, reason:DWORD, reserved:DWORD
+ 00000003  B8 00000001		    mov eax, 1
+				    ret
+ 0000000C			DllEntryPoint ENDP
+
+				; Function to compute the aliquot sum of a number
+ 0000000C			aliquotSum PROC NEAR32
+				    ; Prologue - setup stack frame
+ 0000000C  55			    push ebp
+ 0000000D  8B EC		    mov ebp, esp
+ 0000000F  56			    push esi
+ 00000010  57			    push edi
+
+				    ; Initialize registers
+ 00000011  33 C0		    xor eax, eax                         ; Clear eax for safety
+ 00000013  33 F6		    xor esi, esi                         ; Set esi to 0 (to store sum of divisors)
+ 00000015  BF 00000001		    mov edi, 1                           ; Set divisor (edi) to 1
+
+ 0000001A			calculateDivisors:
+ 0000001A  8B 45 08		    mov eax, [ebp+8]                     ; Load n into eax
+ 0000001D  3B F8		    cmp edi, eax                         ; Compare divisor with n
+ 0000001F  7D 10		    jge done                             ; If divisor >= n, we are done
+
+ 00000021  BA 00000000		    mov edx, 0                           ; Clear edx for division
+ 00000026  F7 F7		    div edi                              ; eax = n / edi, edx = n % edi
+
+ 00000028  85 D2		    test edx, edx                        ; Check if remainder is 0 (i.e., a divisor)
+ 0000002A  75 02		    jnz skip                             ; If remainder is not 0, skip
+
+ 0000002C  03 F7		    add esi, edi                         ; Add the divisor to the sum
+
+ 0000002E			skip:
+ 0000002E  47			    inc edi                              ; Move to the next divisor
+ 0000002F  EB E9		    jmp calculateDivisors                ; Repeat for next divisor
+
+ 00000031			done:
+ 00000031  8B C6		    mov eax, esi                         ; Move the sum of divisors into eax (the return value)
+
+				    ; Epilogue - restore stack and registers
+ 00000033  5F			    pop edi
+ 00000034  5E			    pop esi
+ 00000035  8B E5		    mov esp, ebp
+ 00000037  5D			    pop ebp
+ 00000038  C2 0004		    ret 4                                ; Clean stack and return
+ 0000003B			aliquotSum ENDP
+
+				; Function to classify the number based on its aliquot sum
+ 0000003B			classify PROC NEAR32
+				    ; Prologue - setup stack frame
+ 0000003B  55			    push ebp
+ 0000003C  8B EC		    mov ebp, esp
+ 0000003E  56			    push esi
+
+				    ; Calculate aliquot sum
+ 0000003F  8B 45 08		    mov eax, [ebp+8]                     ; Load the input number (n) into eax
+ 00000042  50			    push eax                             ; Push n as an argument for aliquotSum
+ 00000043  E8 FFFFFFC4		    call aliquotSum                      ; Call aliquotSum, result is in eax
+ 00000048  8B F0		    mov esi, eax                         ; Store aliquot sum in esi
+ 0000004A  8B 45 08		    mov eax, [ebp+8]                     ; Reload n into eax
+
+				    ; Compare aliquot sum with n
+ 0000004D  3B F0		    cmp esi, eax
+ 0000004F  7C 04		    jl deficient                         ; If sum < n, number is deficient (-1)
+ 00000051  74 09		    je perfect                           ; If sum == n, number is perfect (0)
+ 00000053  EB 0E		    jmp abundant                         ; If sum > n, number is abundant (1)
+
+ 00000055			deficient:
+ 00000055  B8 FFFFFFFF		    mov eax, -1                          ; Set result to -1 for deficient
+ 0000005A  EB 0C		    jmp done
+
+ 0000005C			perfect:
+ 0000005C  B8 00000000		    mov eax, 0                           ; Set result to 0 for perfect
+ 00000061  EB 05		    jmp done
+
+ 00000063			abundant:
+ 00000063  B8 00000001		    mov eax, 1                           ; Set result to 1 for abundant
+
+ 00000068			done:
+				    ; Epilogue - restore stack and registers
+ 00000068  5E			    pop esi
+ 00000069  8B E5		    mov esp, ebp
+ 0000006B  5D			    pop ebp
+ 0000006C  C2 0004		    ret 4                                ; Clean stack and return
+ 0000006F			classify ENDP
+
+				end DllEntryPoint
+Microsoft (R) Macro Assembler Version 14.29.30154.0	    10/17/24 22:19:15
+PE1DLL.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000000 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 0000006F DWord	  Public  'CODE'	
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+DllEntryPoint  . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000000C Public STDCALL
+  hInst  . . . . . . . . . . . .	DWord	 bp + 00000008
+  reason . . . . . . . . . . . .	DWord	 bp + 0000000C
+  reserved . . . . . . . . . . .	DWord	 bp + 00000010
+InputInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InputStr . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat8 . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputFloat  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputInt  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OutputStr  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+aliquotSum . . . . . . . . . . .	P Near	 0000000C _TEXT	Length= 0000002F Public STDCALL
+  calculateDivisors  . . . . . .	L Near	 0000001A _TEXT	
+  skip . . . . . . . . . . . . .	L Near	 0000002E _TEXT	
+  done . . . . . . . . . . . . .	L Near	 00000031 _TEXT	
+classify . . . . . . . . . . . .	P Near	 0000003B _TEXT	Length= 00000034 Public STDCALL
+  deficient  . . . . . . . . . .	L Near	 00000055 _TEXT	
+  perfect  . . . . . . . . . . .	L Near	 0000005C _TEXT	
+  abundant . . . . . . . . . . .	L Near	 00000063 _TEXT	
+  done . . . . . . . . . . . . .	L Near	 00000068 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+IO_INC . . . . . . . . . . . . .	Text   	 1
+
+	   0 Warnings
+	   0 Errors

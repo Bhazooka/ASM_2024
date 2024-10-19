@@ -1,0 +1,3 @@
+LIBRARY PE2
+EXPORTS binStringToDecimal
+EXPORTS hexStringToDecimal

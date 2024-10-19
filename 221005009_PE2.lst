@@ -1,0 +1,179 @@
+Microsoft (R) Macro Assembler Version 6.11		    10/17/24 14:45:14
+src\221005009_PE2.asm					     Page 1 - 1
+
+
+				; Author: Baraka Bukanga
+				; PE2 DLL - Binary and Hexadecimal to Decimal Conversion
+				.386
+				.MODEL FLAT, stdcall
+				.STACK 4096
+
+ 00000000			.CODE
+
+				; LibMain function - Checks DLL load status
+ 00000000			LibMain proc instance:DWORD, reason:DWORD, unused:DWORD
+ 00000003  B8 00000001			mov eax, 1
+				  ret
+ 0000000C			LibMain ENDP
+
+				; --------------------------------------
+				; binStringToDecimal
+				; Converts binary string to decimal
+				; Input: pointer to binary string (char*)
+				; Output: decimal integer or -1 if invalid input
+ 0000000C			binStringToDecimal PROC NEAR32
+ 0000000C  55			    push ebp
+ 0000000D  8B EC		    mov  ebp, esp
+ 0000000F  8B 75 08		    mov  esi, [ebp+8]      ; esi points to the binary string (char*)
+
+ 00000012  33 C0		    xor  eax, eax          ; eax will hold the result (decimal value)
+ 00000014  33 DB		    xor  ebx, ebx          ; ebx will be the multiplier (2^position)
+
+				    ; Loop through the string and convert
+ 00000016			check_binary:
+ 00000016  8A 06		    mov  al, byte ptr [esi] ; get the current char
+ 00000018  3C 00		    cmp  al, 0              ; check if end of string
+ 0000001A  74 1A		    je   end_binary         ; if end, jump to the end
+
+				    ; Check if the character is '0' or '1'
+ 0000001C  3C 30		    cmp  al, '0'
+ 0000001E  74 0B		    je   is_zero
+ 00000020  3C 31		    cmp  al, '1'
+ 00000022  74 0C		    je   is_one
+
+				    ; Invalid character found
+ 00000024  B8 FFFFFFFF		    mov  eax, -1
+ 00000029  EB 0D		    jmp  done_binary
+
+ 0000002B			is_zero:
+ 0000002B  D1 E3		    shl  ebx, 1             ; multiply the current result by 2
+ 0000002D  46			    inc  esi                ; move to the next character
+ 0000002E  EB E6		    jmp  check_binary
+
+ 00000030			is_one:
+ 00000030  D1 E3		    shl  ebx, 1             ; multiply the current result by 2
+ 00000032  43			    inc  ebx                ; add 1 for the '1' bit
+ 00000033  46			    inc  esi                ; move to the next character
+ 00000034  EB E0		    jmp  check_binary
+
+ 00000036			end_binary:
+ 00000036  8B C3		    mov  eax, ebx           ; store the final decimal result in eax
+
+ 00000038			done_binary:
+ 00000038  5D			    pop  ebp
+ 00000039  C3			    ret
+ 0000003A			binStringToDecimal ENDP
+
+				; --------------------------------------
+				; hexStringToDecimal
+				; Converts hexadecimal string to decimal
+				; Input: pointer to hexadecimal string (char*)
+				; Output: decimal integer or -1 if invalid input
+ 0000003A			hexStringToDecimal PROC NEAR32
+ 0000003A  55			    push ebp
+ 0000003B  8B EC		    mov  ebp, esp
+ 0000003D  8B 75 08		    mov  esi, [ebp+8]      ; esi points to the hex string (char*)
+
+ 00000040  33 C0		    xor  eax, eax          ; eax will hold the result (decimal value)
+ 00000042  33 DB		    xor  ebx, ebx          ; ebx will be the multiplier (16^position)
+
+				    ; Loop through the string and convert
+ 00000044			check_hex:
+ 00000044  8A 06		    mov  al, byte ptr [esi] ; get the current char
+ 00000046  3C 00		    cmp  al, 0              ; check if end of string
+ 00000048  74 2D		    je   end_hex            ; if end, jump to the end
+
+				    ; Check if the character is a valid hex digit (0-9, A-F)
+ 0000004A  3C 30		    cmp  al, '0'
+ 0000004C  7C 0C		    jl   invalid_hex
+ 0000004E  3C 39		    cmp  al, '9'
+ 00000050  7E 0F		    jle  is_digit
+
+ 00000052  3C 41		    cmp  al, 'A'
+ 00000054  7C 04		    jl   invalid_hex
+ 00000056  3C 46		    cmp  al, 'F'
+ 00000058  7E 11		    jle  is_upper_hex
+
+ 0000005A			invalid_hex:
+ 0000005A  B8 FFFFFFFF		    mov  eax, -1            ; invalid character, return -1
+ 0000005F  EB 18		    jmp  done_hex
+
+ 00000061			is_digit:
+ 00000061  2C 30		    sub  al, '0'            ; convert char '0'-'9' to 0-9
+ 00000063  C1 E0 04		    shl  eax, 4             ; shift result left by 4 (multiply by 16)
+ 00000066  03 C3		    add  eax, ebx           ; add current hex digit to result
+ 00000068  46			    inc  esi                ; move to the next character
+ 00000069  EB D9		    jmp  check_hex
+
+ 0000006B			is_upper_hex:
+ 0000006B  2C 41		    sub  al, 'A'            ; convert char 'A'-'F' to 0-5
+ 0000006D  04 0A		    add  al, 10             ; convert to its correct decimal value (A = 10)
+ 0000006F  C1 E0 04		    shl  eax, 4             ; shift result left by 4 (multiply by 16)
+ 00000072  03 C3		    add  eax, ebx           ; add current hex digit to result
+ 00000074  46			    inc  esi                ; move to the next character
+ 00000075  EB CD		    jmp  check_hex
+
+ 00000077			end_hex:
+ 00000077  8B C3		    mov  eax, ebx           ; store the final decimal result in eax
+
+ 00000079			done_hex:
+ 00000079  5D			    pop  ebp
+ 0000007A  C3			    ret
+ 0000007B			hexStringToDecimal ENDP
+
+				END LibMain
+Microsoft (R) Macro Assembler Version 6.11		    10/17/24 14:45:14
+src\221005009_PE2.asm					     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000000 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 0000007B DWord	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+LibMain  . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000000C Public STDCALL
+  instance . . . . . . . . . . .	DWord	 bp + 00000008
+  reason . . . . . . . . . . . .	DWord	 bp + 0000000C
+  unused . . . . . . . . . . . .	DWord	 bp + 00000010
+binStringToDecimal . . . . . . .	P Near	 0000000C _TEXT	Length= 0000002E Public STDCALL
+  check_binary . . . . . . . . .	L Near	 00000016 _TEXT	
+  is_zero  . . . . . . . . . . .	L Near	 0000002B _TEXT	
+  is_one . . . . . . . . . . . .	L Near	 00000030 _TEXT	
+  end_binary . . . . . . . . . .	L Near	 00000036 _TEXT	
+  done_binary  . . . . . . . . .	L Near	 00000038 _TEXT	
+hexStringToDecimal . . . . . . .	P Near	 0000003A _TEXT	Length= 00000041 Public STDCALL
+  check_hex  . . . . . . . . . .	L Near	 00000044 _TEXT	
+  invalid_hex  . . . . . . . . .	L Near	 0000005A _TEXT	
+  is_digit . . . . . . . . . . .	L Near	 00000061 _TEXT	
+  is_upper_hex . . . . . . . . .	L Near	 0000006B _TEXT	
+  end_hex  . . . . . . . . . . .	L Near	 00000077 _TEXT	
+  done_hex . . . . . . . . . . .	L Near	 00000079 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+
+	   0 Warnings
+	   0 Errors

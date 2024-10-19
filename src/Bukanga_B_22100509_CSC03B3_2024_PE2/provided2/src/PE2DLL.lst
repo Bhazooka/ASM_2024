@@ -1,0 +1,186 @@
+Microsoft (R) Macro Assembler Version 14.29.30154.0	    10/17/24 23:08:28
+PE2DLL.asm						     Page 1 - 1
+
+
+				; B, Bukanga 221005009
+				; PE2 DLL alternate structure
+				.386
+				.MODEL FLAT, stdcall
+				.STACK 4096
+
+ 00000000			.CODE
+ 00000000			LibMain proc hInst:DWORD, dwReason:DWORD, reserved:DWORD
+ 00000003  B8 00000001		    MOV eax, 1        ; Indicate successful load
+				    RET
+ 0000000C			LibMain endp
+
+				; int binStringToDecimal(char* binaryStr)
+ 0000000C			binStringToDecimal PROC
+ 0000000C  55			    PUSH ebp             ; Set up stack frame
+ 0000000D  8B EC		    MOV ebp, esp
+ 0000000F  8B 55 08		    MOV edx, [ebp+8]     ; EDX holds the binary string address
+ 00000012  B8 00000000		    MOV eax, 0           ; Clear result (EAX)
+ 00000017  B9 00000000		    MOV ecx, 0           ; Clear index (ECX)
+
+ 0000001C			    ConvertBin:
+ 0000001C  8A 1C 0A		        MOV bl, [edx+ecx]    ; Load current character
+ 0000001F  84 DB		        TEST bl, bl          ; Test for null terminator
+ 00000021  74 22		        JZ Complete           ; If found, exit
+
+
+ 00000023  83 F9 08		        CMP ecx, 8           ; Limit string length to 8 characters
+ 00000026  7D 1D		        JGE Complete
+
+				                 
+				        ; CMP bl, '1'         
+				        ; JE AddOne           
+				        ; CMP bl, '0'          
+				        ; JE ShiftLeft         
+				        ; MOV eax, -1          
+				        ; JMP Complete
+				         
+ 00000028  80 FB 31		        CMP bl, '1'          ; Check if it's a '1'
+ 0000002B  74 10		        JE AddOne            ; If '1', shift and add 1
+ 0000002D  80 FB 30		        CMP bl, '0'          ; Check if it's a '0'
+ 00000030  74 07		        JE ShiftLeft         ; If '0', just shift
+ 00000032  B8 FFFFFFFF		        MOV eax, -1          ; Invalid character
+ 00000037  EB 0C		        JMP Complete
+
+ 00000039			    ShiftLeft:
+ 00000039  D1 E0		        SHL eax, 1           ; Shift left (multiply by 2)
+ 0000003B  EB 05		        JMP IncChar
+
+ 0000003D			    AddOne:
+ 0000003D  D1 E0		        SHL eax, 1           ; Shift left and add 1
+ 0000003F  83 C0 01		        ADD eax, 1
+
+ 00000042			    IncChar:
+ 00000042  41			        INC ecx              ; Move to next character
+ 00000043  EB D7		        JMP ConvertBin
+
+ 00000045			    Complete:
+ 00000045  8B E5		        MOV esp, ebp         ; Clean up stack
+ 00000047  5D			        POP ebp
+ 00000048  C3			        RET
+ 00000049			binStringToDecimal endp
+
+				; int hexStringToDecimal(char* hexStr)
+ 00000049			hexStringToDecimal PROC
+ 00000049  55			    PUSH ebp              ; Set up stack frame
+ 0000004A  8B EC		    MOV ebp, esp
+ 0000004C  8B 55 08		    MOV edx, [ebp+8]      ; EDX holds the hex string address
+ 0000004F  B8 00000000		    MOV eax, 0            ; Clear result (EAX)
+ 00000054  B9 00000000		    MOV ecx, 0            ; Clear index (ECX)
+ 00000059  BB 00000000		    MOV ebx, 0            ; Temporary storage for char value
+
+ 0000005E			    ProcessHex:
+				        ;     MOV bl, [edx+ecx]    
+				        ; TEST bl, bl         
+				        ; JZ DoneHex           
+				        ; CMP ecx, 4           
+				        ; JGE DoneHex
+				        ; CMP bl, '0'
+				        ; JB InvalidHex        
+				        ; CMP bl, '9'
+				        ; JLE ConvertDigit     
+				        ; CMP bl, 'F'
+				        ; JLE ConvertLetter    
+				        ; CMP bl, 'A'
+				        ; JB InvalidHex        
+ 0000005E  8A 1C 0A		        MOV bl, [edx+ecx]    ; Load current character
+ 00000061  84 DB		        TEST bl, bl          ; Test for null terminator
+ 00000063  74 33		        JZ DoneHex           ; If found, exit
+ 00000065  83 F9 04		        CMP ecx, 4           ; Limit string length to 4 characters
+ 00000068  7D 2E		        JGE DoneHex
+ 0000006A  80 FB 30		        CMP bl, '0'
+ 0000006D  72 0F		        JB InvalidHex        ; Invalid if less than '0'
+ 0000006F  80 FB 39		        CMP bl, '9'
+ 00000072  7E 11		        JLE ConvertDigit     ; If between '0' and '9', it's valid
+ 00000074  80 FB 46		        CMP bl, 'F'
+ 00000077  7E 11		        JLE ConvertLetter    ; If between 'A' and 'F', it's valid
+ 00000079  80 FB 41		        CMP bl, 'A'
+ 0000007C  72 00		        JB InvalidHex        ; Invalid if less than 'A'
+
+ 0000007E			    InvalidHex:
+ 0000007E  B8 FFFFFFFF		        MOV eax, -1          ; Invalid character, return error
+ 00000083  EB 13		        JMP DoneHex
+
+ 00000085			    ConvertDigit:
+ 00000085  80 EB 30		        SUB bl, '0'          ; Convert digit character to numeric value
+ 00000088  EB 06		        JMP ValidHex
+
+ 0000008A			    ConvertLetter:
+ 0000008A  80 EB 41		        SUB bl, 'A'          ; Convert letter 'A'-'F' to numeric
+ 0000008D  80 C3 0A		        ADD bl, 10           ; Add 10 to get the actual hex value
+
+ 00000090			    ValidHex:
+ 00000090  C1 E0 04		        SHL eax, 4           ; Multiply current result by 16
+ 00000093  03 C3		        ADD eax, ebx         ; Add the current hex digit
+
+ 00000095			    NextHex:
+ 00000095  41			        INC ecx              ; Move to next character
+ 00000096  EB C6		        JMP ProcessHex
+
+ 00000098			    DoneHex:
+ 00000098  8B E5		        MOV esp, ebp         ; Clean up stack
+ 0000009A  5D			        POP ebp
+ 0000009B  C3			        RET
+ 0000009C			hexStringToDecimal endp
+
+				END LibMain
+Microsoft (R) Macro Assembler Version 14.29.30154.0	    10/17/24 23:08:28
+PE2DLL.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000000 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 0000009C DWord	  Public  'CODE'	
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+LibMain  . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000000C Public STDCALL
+  hInst  . . . . . . . . . . . .	DWord	 bp + 00000008
+  dwReason . . . . . . . . . . .	DWord	 bp + 0000000C
+  reserved . . . . . . . . . . .	DWord	 bp + 00000010
+binStringToDecimal . . . . . . .	P Near	 0000000C _TEXT	Length= 0000003D Public STDCALL
+  ConvertBin . . . . . . . . . .	L Near	 0000001C _TEXT	
+  ShiftLeft  . . . . . . . . . .	L Near	 00000039 _TEXT	
+  AddOne . . . . . . . . . . . .	L Near	 0000003D _TEXT	
+  IncChar  . . . . . . . . . . .	L Near	 00000042 _TEXT	
+  Complete . . . . . . . . . . .	L Near	 00000045 _TEXT	
+hexStringToDecimal . . . . . . .	P Near	 00000049 _TEXT	Length= 00000053 Public STDCALL
+  ProcessHex . . . . . . . . . .	L Near	 0000005E _TEXT	
+  InvalidHex . . . . . . . . . .	L Near	 0000007E _TEXT	
+  ConvertDigit . . . . . . . . .	L Near	 00000085 _TEXT	
+  ConvertLetter  . . . . . . . .	L Near	 0000008A _TEXT	
+  ValidHex . . . . . . . . . . .	L Near	 00000090 _TEXT	
+  NextHex  . . . . . . . . . . .	L Near	 00000095 _TEXT	
+  DoneHex  . . . . . . . . . . .	L Near	 00000098 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+
+	   0 Warnings
+	   0 Errors
